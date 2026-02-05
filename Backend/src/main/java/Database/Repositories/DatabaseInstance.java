@@ -12,7 +12,7 @@ public class DatabaseInstance {
     private DatabaseInstance() {
         this.DBPATH = DatabaseConfig.DB_PATH;
     }
-    public static DatabaseInstance getInstance() {return INSTANCE;}
+    public static DatabaseInstance createInstance() {return INSTANCE;}
     public Connection getConnection() {return connection;}
 
     public void connect() {
