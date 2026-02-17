@@ -1,33 +1,47 @@
 package Models;
 
+import Services.Calculation.*;
+import Services.Contracts.IChampionshipPointCalculator;
+import org.springframework.lang.NonNull;
+
 import java.util.List;
-import java.util.Map;
 
 public class Tournament {
-    private int id;
-    private String name;
-    private Map<AgeDivision, DivisionData> divisions; // Helper class or structure for divisions
+    private AgeDivision ageDivision;
+    private final String tournamentType;
+    private final IChampionshipPointCalculator championshipPointCalculator;
+    private final List<Result> results;
 
-    public Tournament(int id, String name, Map<AgeDivision, DivisionData> divisions) {
-        this.id = id;
-        this.name = name;
-        this.divisions = divisions;
+    public Tournament(AgeDivision ageDivision, String tournamentType, IChampionshipPointCalculator championshipPointCalculator, List<Result> results) {
+        this.ageDivision = ageDivision;
+        this.tournamentType = tournamentType;
+        this.championshipPointCalculator = createPointCalculator(tournamentType);
+        this.results = results;
+        calculateChampionshipPoints();
     }
 
-    public int getId() { return id; }
-    public String getName() { return name; }
-    public Map<AgeDivision, DivisionData> getDivisions() { return divisions; }
+    @NonNull
+    private IChampionshipPointCalculator createPointCalculator(String tournamentType) {
+        return switch (tournamentType) {
+            case "casual" -> new CasualPointCalculator();
+            case "challenge" -> new ChallengePointCalculator();
+            case "cup" -> new CupPointCalculator();
+            default -> throw new IllegalArgumentException("Unknown tournament type: " + tournamentType);
+        };
+    }
 
-    public static class DivisionData {
-        private String tournamentType;
-        private List<Result> results;
+    public List<Result> getResults() {
+        return results;
+    }
 
-        public DivisionData(String tournamentType, List<Result> results) {
-            this.tournamentType = tournamentType;
-            this.results = results;
-        }
+    public AgeDivision getAgeDivision() {
+        return ageDivision;
+    }
 
-        public String getTournamentType() { return tournamentType; }
-        public List<Result> getResults() { return results; }
+    public String getTournamentType() {
+        return tournamentType;
+    }
+    public void calculateChampionshipPoints(){
+        championshipPointCalculator.calculateChampionshipPoints(this);
     }
 }

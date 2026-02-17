@@ -7,6 +7,7 @@ public class Result {
     private int matchPoints;
     private double opponentWinPercentage;
     private double opponentOpponentWinPercentage;
+    private int championshipPointsEarned;
 
     public Result(Player player, int placement, int points, int matchPoints, double opponentWinPercentage, double opponentOpponentWinPercentage) {
         this.player = player;
@@ -35,5 +36,11 @@ public class Result {
     }
     public double getOpponentOpponentWinPercentage() {
         return opponentOpponentWinPercentage;
+    }
+    public int getChampionshipPointsEarned() {
+        return championshipPointsEarned;
+    }
+    public void setChampionshipPointsEarned(int championshipPointsEarned) {
+
     }
 }

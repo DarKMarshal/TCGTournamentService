@@ -1,13 +1,15 @@
 package Database.Repositories;
 
 import Models.Player;
+import Models.Result;
+import Services.Contracts.IPlayerRepository;
 import org.springframework.lang.NonNull;
 
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
 
-public class PlayerRepository {
+public class PlayerRepository implements IPlayerRepository {
     private final Connection connection;
 
     public PlayerRepository(Connection connection) {
@@ -60,6 +62,21 @@ public class PlayerRepository {
             e.printStackTrace();
         }
         return players;
+    }
+
+    public void updatePlayerChampionshipPoints(@NonNull List<Result> results) throws SQLException {
+        String sql = "UPDATE players SET championship_points = championship_points + ? WHERE id = ?";
+        try (PreparedStatement pstmt = connection.prepareStatement(sql)) {
+            for (Result result : results) {
+                int pointsEarned = result.getChampionshipPointsEarned();
+                if (pointsEarned > 0) {
+                    pstmt.setInt(1, pointsEarned);
+                    pstmt.setInt(2, result.getPlayer().getId());
+                    pstmt.addBatch();
+                }
+            }
+            pstmt.executeBatch();
+        }
     }
 
     public void deletePlayer(int id) {
