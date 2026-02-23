@@ -2,20 +2,20 @@ package Database.Repositories;
 
 import Models.Player;
 import Models.Result;
-import Services.Contracts.IPlayerRepository;
 import org.springframework.lang.NonNull;
 
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
 
-public class PlayerRepository implements IPlayerRepository {
+public class PlayerRepository implements Services.Contracts.IPlayerRepository {
     private final Connection connection;
 
     public PlayerRepository(Connection connection) {
         this.connection = connection;
     }
 
+    @Override
     public void savePlayer(@NonNull Player player) {
         String sql = "INSERT OR REPLACE INTO players (id, name, championship_points) VALUES (?, ?, ?)";
         try (PreparedStatement pstmt = connection.prepareStatement(sql)) {
@@ -28,6 +28,7 @@ public class PlayerRepository implements IPlayerRepository {
         }
     }
 
+    @Override
     public Player getPlayerById(int id) {
         String sql = "SELECT * FROM players WHERE id = ?";
         try (PreparedStatement pstmt = connection.prepareStatement(sql)) {
@@ -46,6 +47,18 @@ public class PlayerRepository implements IPlayerRepository {
         return null;
     }
 
+    @Override
+    public Player getOrCreatePlayer(int id, String name) {
+        Player existing = getPlayerById(id);
+        if (existing == null) {
+            Player newPlayer = new Player(id, name);
+            savePlayer(newPlayer);
+            return newPlayer;
+        }
+        return existing;
+    }
+
+    @Override
     public List<Player> getAllPlayers() {
         List<Player> players = new ArrayList<>();
         String sql = "SELECT * FROM players ORDER BY id";
@@ -64,6 +77,7 @@ public class PlayerRepository implements IPlayerRepository {
         return players;
     }
 
+    @Override
     public void updatePlayerChampionshipPoints(@NonNull List<Result> results) throws SQLException {
         String sql = "UPDATE players SET championship_points = championship_points + ? WHERE id = ?";
         try (PreparedStatement pstmt = connection.prepareStatement(sql)) {
@@ -79,6 +93,7 @@ public class PlayerRepository implements IPlayerRepository {
         }
     }
 
+    @Override
     public void deletePlayer(int id) {
         String sql = "DELETE FROM players WHERE id = ?";
         try (PreparedStatement pstmt = connection.prepareStatement(sql)) {

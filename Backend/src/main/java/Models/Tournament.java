@@ -7,12 +7,12 @@ import org.springframework.lang.NonNull;
 import java.util.List;
 
 public class Tournament {
-    private AgeDivision ageDivision;
+    private final AgeDivision ageDivision;
     private final String tournamentType;
     private final IChampionshipPointCalculator championshipPointCalculator;
     private final List<Result> results;
 
-    public Tournament(AgeDivision ageDivision, String tournamentType, IChampionshipPointCalculator championshipPointCalculator, List<Result> results) {
+    public Tournament(AgeDivision ageDivision, String tournamentType, List<Result> results) {
         this.ageDivision = ageDivision;
         this.tournamentType = tournamentType;
         this.championshipPointCalculator = createPointCalculator(tournamentType);
