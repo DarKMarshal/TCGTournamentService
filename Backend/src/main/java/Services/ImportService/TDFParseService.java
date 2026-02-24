@@ -8,7 +8,7 @@ import javax.xml.parsers.*;
 import java.io.File;
 import java.util.*;
 
-public class TDUParseService {
+public class TDFParseService extends IParseService{
     public static Event parseEventFile(String filePath, IPlayerRepository playerRepository, IEventRepository eventRepository) throws Exception{
         File xmlFile = new File(filePath);
         DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
