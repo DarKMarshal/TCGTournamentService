@@ -25,6 +25,8 @@ public class Player {
     public int getChampionshipPoints() {
         return championshipPoints;
     }
+
+    // This shouldn't be needed, but it's here just in case
     public void setChampionshipPoints(int championshipPoints) {
         this.championshipPoints = championshipPoints;
     }

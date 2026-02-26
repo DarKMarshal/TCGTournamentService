@@ -1,19 +1,21 @@
 package Database.Repositories;
 
 import Models.Player;
+import Models.Result;
 import org.springframework.lang.NonNull;
 
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
 
-public class PlayerRepository {
+public class PlayerRepository implements Services.Contracts.IPlayerRepository {
     private final Connection connection;
 
     public PlayerRepository(Connection connection) {
         this.connection = connection;
     }
 
+    @Override
     public void savePlayer(@NonNull Player player) {
         String sql = "INSERT OR REPLACE INTO players (id, name, championship_points) VALUES (?, ?, ?)";
         try (PreparedStatement pstmt = connection.prepareStatement(sql)) {
@@ -26,6 +28,7 @@ public class PlayerRepository {
         }
     }
 
+    @Override
     public Player getPlayerById(int id) {
         String sql = "SELECT * FROM players WHERE id = ?";
         try (PreparedStatement pstmt = connection.prepareStatement(sql)) {
@@ -44,6 +47,18 @@ public class PlayerRepository {
         return null;
     }
 
+    @Override
+    public Player getOrCreatePlayer(int id, String name) {
+        Player existing = getPlayerById(id);
+        if (existing == null) {
+            Player newPlayer = new Player(id, name);
+            savePlayer(newPlayer);
+            return newPlayer;
+        }
+        return existing;
+    }
+
+    @Override
     public List<Player> getAllPlayers() {
         List<Player> players = new ArrayList<>();
         String sql = "SELECT * FROM players ORDER BY id";
@@ -62,6 +77,23 @@ public class PlayerRepository {
         return players;
     }
 
+    @Override
+    public void updatePlayerChampionshipPoints(@NonNull List<Result> results) throws SQLException {
+        String sql = "UPDATE players SET championship_points = championship_points + ? WHERE id = ?";
+        try (PreparedStatement pstmt = connection.prepareStatement(sql)) {
+            for (Result result : results) {
+                int pointsEarned = result.getChampionshipPointsEarned();
+                if (pointsEarned > 0) {
+                    pstmt.setInt(1, pointsEarned);
+                    pstmt.setInt(2, result.getPlayer().getId());
+                    pstmt.addBatch();
+                }
+            }
+            pstmt.executeBatch();
+        }
+    }
+
+    @Override
     public void deletePlayer(int id) {
         String sql = "DELETE FROM players WHERE id = ?";
         try (PreparedStatement pstmt = connection.prepareStatement(sql)) {
