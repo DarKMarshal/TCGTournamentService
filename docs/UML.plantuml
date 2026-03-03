@@ -1,0 +1,428 @@
+@startuml Backend Class Diagram
+' ═══════════════════════════════════════════════
+'  GLOBAL STYLE
+' ═══════════════════════════════════════════════
+left to right direction
+skinparam linetype ortho
+skinparam shadowing true
+skinparam defaultFontName  "Segoe UI"
+skinparam defaultFontSize  11
+
+skinparam package {
+    FontSize   13
+    FontStyle  bold
+    Style      rectangle
+}
+
+skinparam class {
+    FontSize              11
+    AttributeFontSize     10
+    StereotypeFontSize    9
+    BorderThickness       1.5
+    HeaderBackgroundColor #F8F8F8
+}
+
+skinparam arrow {
+    FontSize  10
+    Color     #555555
+}
+
+' ── Per-layer colours ──────────────────────────
+skinparam packageBackgroundColor<<models>>    #DCEEFB
+skinparam packageBorderColor<<models>>        #4A90D9
+skinparam packageBackgroundColor<<contracts>> #FFF3CD
+skinparam packageBorderColor<<contracts>>     #D4A017
+skinparam packageBackgroundColor<<calc>>      #E8F5E9
+skinparam packageBorderColor<<calc>>          #43A047
+skinparam packageBackgroundColor<<dto>>       #F3E5F5
+skinparam packageBorderColor<<dto>>           #8E24AA
+skinparam packageBackgroundColor<<import>>    #FBE9E7
+skinparam packageBorderColor<<import>>        #E64A19
+skinparam packageBackgroundColor<<network>>   #FFE0B2
+skinparam packageBorderColor<<network>>       #EF6C00
+skinparam packageBackgroundColor<<database>>  #E0F2F1
+skinparam packageBorderColor<<database>>      #00897B
+
+' ═══════════════════════════════════════════════
+'  1 ·  MODELS  (blue)
+' ═══════════════════════════════════════════════
+package "Models" <<models>> {
+
+    enum AgeDivision #B3D7F2 {
+        Junior
+        Senior
+        Master
+    }
+
+    class Event #B3D7F2 {
+        - id : String
+        - name : String
+        - uploaderID : int
+        - divisions : List<Tournament>
+    }
+
+    class Player #B3D7F2 {
+        - id : int
+        - name : String
+        - championshipPoints : int
+    }
+
+    class Result #B3D7F2 {
+        - player : Player
+        - placement : int
+        - matchPoints : int
+        - opponentWinPercentage : double
+        - opponentOpponentWinPercentage : double
+        - championshipPointsEarned : int
+    }
+
+    class Tournament #B3D7F2 {
+        - ageDivision : AgeDivision
+        - tournamentType : String
+        - championshipPointCalculator : IChampionshipPointCalculator
+        - results : List<Result>
+        --
+        - createPointCalculator(String) : IChampionshipPointCalculator
+        + calculateChampionshipPoints() : void
+    }
+}
+
+' ═══════════════════════════════════════════════
+'  2 ·  CONTRACTS  (yellow)
+' ═══════════════════════════════════════════════
+package "Services.Contracts" <<contracts>> {
+
+    interface IChampionshipPointCalculator <<interface>> #FFF9C4 {
+        + calculateChampionshipPoints(Tournament) : void
+    }
+
+    interface IEventRepository <<interface>> #FFF9C4 {
+        + saveEvent(Event) : void
+        + deleteEvent(String) : void
+    }
+
+    interface IPlayerRepository <<interface>> #FFF9C4 {
+        + savePlayer(Player) : void
+        + getPlayerById(int) : Player
+        + getOrCreatePlayer(int, String) : Player
+        + getAllPlayers() : List<Player>
+        + updatePlayerChampionshipPoints(List<Result>) : void
+        + deletePlayer(int) : void
+    }
+
+    interface IResultsRepository <<interface>> #FFF9C4 {
+        + saveResults(String, String, List<Result>) : void
+        + getResultsByEventAndDivision(String, String) : List<Result>
+    }
+
+    interface ITournamentRepository <<interface>> #FFF9C4 {
+        + saveTournamentDivision(String, Tournament) : void
+        + getTournamentDivision(String) : Tournament
+        + getAllTournamentDivisions(String) : void
+        + findAllDivisions(String) : List<String[]>
+    }
+
+    abstract class IImportService <<abstract>> #FFF9C4 {
+    }
+
+    abstract class IParseService <<abstract>> #FFF9C4 {
+        {static} parseEventFile : Event
+        {static} determineTournamentType : String
+        {static} parsePlayers : Map<String, Player>
+        {static} calculatePlayerStats : Map<String, PlayerMatchStats>
+        {static} parseDivisions : List<Tournament>
+        {static} parseStandings : List<Result>
+        {static} getAgeDivisionFromCategory : AgeDivision
+    }
+}
+
+' ═══════════════════════════════════════════════
+'  3 ·  CALCULATION  (green)
+' ═══════════════════════════════════════════════
+package "Services.Calculation" <<calc>> {
+
+    class CasualPointCalculator #C8E6C9 {
+        + calculateChampionshipPoints(Tournament) : void
+    }
+
+    class ChallengePointCalculator #C8E6C9 {
+        + calculateChampionshipPoints(Tournament) : void
+        - calculatePoints(int, int) : int
+    }
+
+    class CupPointCalculator #C8E6C9 {
+        + calculateChampionshipPoints(Tournament) : void
+        - calculatePoints(int, int) : int
+    }
+}
+
+' ═══════════════════════════════════════════════
+'  4 ·  DTO  (purple)
+' ═══════════════════════════════════════════════
+package "Services.DTO" <<dto>> {
+
+    class DivisionDTO <<record>> #E1BEE7 {
+        + ageDivision : String
+        + tournamentType : String
+        + results : List<Result>
+    }
+
+    class EventDetailsDTO <<record>> #E1BEE7 {
+        + id : String
+        + name : String
+        + divisions : List<DivisionDTO>
+    }
+
+    class EventSummaryDTO <<record>> #E1BEE7 {
+        + id : String
+        + name : String
+    }
+
+    class PlayerMatchStats #E1BEE7 {
+        - matchPoints : int
+        - matchesPlayed : int
+        - wins : int
+        - byes : int
+        - roundsParticipated : int
+        - isDropped : boolean
+        - totalTournamentRounds : int
+        - opponents : List<String>
+        - opponentWinPercentage : double
+        - opponentOpponentWinPercentage : double
+        --
+        + getWinPercentage() : double
+        + addMatchPoints(int) : void
+        + addMatch() : void
+        + addWin() : void
+        + addBye() : void
+        + addOpponent(String) : void
+    }
+}
+
+' ═══════════════════════════════════════════════
+'  5 ·  IMPORT SERVICE  (red-orange)
+' ═══════════════════════════════════════════════
+package "Services.ImportService" <<import>> {
+
+    class ImportService #FFCCBC {
+        + {static} retrieveEventInformation(Connection, String) : void
+    }
+
+    class TDFParseService #FFCCBC {
+        + {static} parseEventFile(String, IPlayerRepository, IEventRepository) : Event
+        --
+        - {static} determineTournamentType(Document) : String
+        - {static} parsePlayers(Document, IPlayerRepository) : Map<String, Player>
+        - {static} calculatePlayerStats(Document) : Map<String, PlayerMatchStats>
+        - {static} parseDivisions(...) : List<Tournament>
+        - {static} parseStandings(...) : List<Result>
+        - {static} getAgeDivisionFromCategory(String) : AgeDivision
+        - {static} getElementText(...) : String
+        - {static} getElementAttribute(...) : String
+    }
+}
+
+' ═══════════════════════════════════════════════
+'  6 ·  NETWORK  (orange)
+' ═══════════════════════════════════════════════
+package "Services.Network" <<network>> {
+
+    class DatabaseBeans <<@Configuration>> #FFE0B2 {
+        - databaseInstance : DatabaseInstance
+        --
+        + databaseConnection() : Connection
+        + eventRepository() : EventRepository
+        + tournamentRepository() : TournamentRepository
+        + resultsRepository() : ResultsRepository
+    }
+
+    class EventDetailsRequest #FFE0B2 {
+        - eventId : String
+        + getEventId() : String
+        + setEventId(String) : void
+    }
+
+    class FileUploadController <<@RestController>> #FFE0B2 {
+        - connection : Connection
+        - eventRepository : EventRepository
+        - messagingTemplate : SimpMessagingTemplate
+        --
+        + uploadTdfFile(MultipartFile) : ResponseEntity<String>
+    }
+
+    class TournamentWebSocketController <<@Controller>> #FFE0B2 {
+        - eventRepository : EventRepository
+        - tournamentRepository : TournamentRepository
+        - resultsRepository : ResultsRepository
+        --
+        + getAllEvents() : List<EventSummaryDTO>
+        + getEventDetails(EventDetailsRequest) : EventDetailsDTO
+    }
+
+    class WebSocketConfig <<@Configuration>> #FFE0B2 {
+        + configureMessageBroker(MessageBrokerRegistry) : void
+        + registerStompEndpoints(StompEndpointRegistry) : void
+    }
+}
+
+' ═══════════════════════════════════════════════
+'  7 ·  DATABASE  (teal)
+' ═══════════════════════════════════════════════
+package "Database" <<database>> {
+
+    class DatabaseConfig #B2DFDB {
+        + {static} DB_PATH : String
+    }
+
+    class DBInitializer #B2DFDB {
+        + {static} initializeDatabase(String) : void
+        - {static} readSchemaFile() : String
+    }
+}
+
+package "Database.Repositories" <<database>> {
+
+    class DatabaseInstance #B2DFDB {
+        - {static} INSTANCE : DatabaseInstance
+        - DBPATH : String
+        - connection : Connection
+        --
+        + {static} createInstance() : DatabaseInstance
+        + connect() : void
+        + disconnect() : void
+        + getConnection() : Connection
+    }
+
+    class EventRepository #B2DFDB {
+        - connection : Connection
+        - resultsRepository : IResultsRepository
+        - playerRepository : PlayerRepository
+        - tournamentRepository : ITournamentRepository
+        --
+        + saveEvent(Event) : void
+        + getEventById(String) : Event
+        + deleteEvent(String) : void
+        + getAllEvents() : List<Event>
+    }
+
+    class PlayerRepository #B2DFDB {
+        - connection : Connection
+        --
+        + savePlayer(Player) : void
+        + getPlayerById(int) : Player
+        + getOrCreatePlayer(int, String) : Player
+        + getAllPlayers() : List<Player>
+        + updatePlayerChampionshipPoints(List<Result>) : void
+        + deletePlayer(int) : void
+    }
+
+    class ResultsRepository #B2DFDB {
+        - connection : Connection
+        --
+        + saveResults(String, String, List<Result>) : void
+        + getResultsByEventAndDivision(String, String) : List<Result>
+    }
+
+    class TournamentRepository #B2DFDB {
+        - connection : Connection
+        --
+        + saveTournamentDivision(String, Tournament) : void
+        + findAllDivisions(String) : List<String[]>
+    }
+}
+
+' ═══════════════════════════════════════════════
+'  8 ·  ENTRY POINTS
+' ═══════════════════════════════════════════════
+class Main <<@SpringBootApplication>> #D6D6D6 {
+    + {static} main(String[]) : void
+}
+
+class TestMain #D6D6D6 {
+    + {static} main(String[]) : void
+}
+
+
+' ═══════════════════════════════════════════════
+'  RELATIONSHIPS
+' ═══════════════════════════════════════════════
+
+' ── Interface Implementations (dashed green) ──
+CasualPointCalculator      ..[#43A047].|>  IChampionshipPointCalculator
+ChallengePointCalculator   ..[#43A047].|>  IChampionshipPointCalculator
+CupPointCalculator         ..[#43A047].|>  IChampionshipPointCalculator
+EventRepository            ..[#43A047].|>  IEventRepository
+PlayerRepository           ..[#43A047].|>  IPlayerRepository
+ResultsRepository          ..[#43A047].|>  IResultsRepository
+TournamentRepository       ..[#43A047].|>  ITournamentRepository
+ImportService              --[#43A047]|>   IImportService               : extends
+TDFParseService            --[#43A047]|>   IParseService                : extends
+
+' ── Model Compositions (solid blue) ───────────
+Event        "1" *-[#4A90D9]- "0..*" Tournament        : divisions
+Tournament   "1" *-[#4A90D9]- "0..*" Result            : results
+Tournament   "1" o-[#4A90D9]- "1"    AgeDivision       : ageDivision
+Tournament   "1" -[#4A90D9]-> "1"    IChampionshipPointCalculator : uses
+Result       "1" -[#4A90D9]-> "1"    Player             : player
+
+' ── Repository Composition (teal) ─────────────
+EventRepository "1" *-[#00897B]- "1" IResultsRepository
+EventRepository "1" *-[#00897B]- "1" PlayerRepository
+EventRepository "1" *-[#00897B]- "1" ITournamentRepository
+
+' ── Database internals (teal dashed) ──────────
+DatabaseInstance ..[#00897B].> DatabaseConfig    : reads DB_PATH
+DatabaseInstance ..[#00897B].> DBInitializer     : initializes schema
+
+' ── Spring Bean Wiring (orange) ───────────────
+DatabaseBeans -[#EF6C00]->  DatabaseInstance       : wraps
+DatabaseBeans .[#EF6C00].>  EventRepository        : «@Bean»
+DatabaseBeans .[#EF6C00].>  TournamentRepository   : «@Bean»
+DatabaseBeans .[#EF6C00].>  ResultsRepository      : «@Bean»
+
+' ── Controller → Repository (orange) ──────────
+FileUploadController          -[#EF6C00]->  EventRepository
+FileUploadController          .[#E64A19].>  ImportService          : calls
+TournamentWebSocketController -[#EF6C00]->  EventRepository
+TournamentWebSocketController -[#EF6C00]->  TournamentRepository
+TournamentWebSocketController -[#EF6C00]->  ResultsRepository
+
+' ── Import pipeline (red-orange dashed) ───────
+ImportService  .[#E64A19].> TDFParseService    : delegates
+ImportService  .[#E64A19].> EventRepository    : saves
+ImportService  .[#E64A19].> PlayerRepository   : provides to parser
+
+' ── TDFParseService deps ──────────────────────
+TDFParseService .[#E64A19].> IPlayerRepository  : uses
+TDFParseService .[#E64A19].> IEventRepository   : uses
+TDFParseService .[#E64A19].> PlayerMatchStats   : creates
+
+' ── DTO usage (purple dashed) ─────────────────
+TournamentWebSocketController .[#8E24AA].> EventSummaryDTO  : returns
+TournamentWebSocketController .[#8E24AA].> EventDetailsDTO  : returns
+TournamentWebSocketController .[#8E24AA].> DivisionDTO      : returns
+FileUploadController          .[#8E24AA].> EventSummaryDTO  : broadcasts
+
+EventDetailsDTO -[#8E24AA]-> DivisionDTO  : divisions
+DivisionDTO     -[#8E24AA]-> Result       : results
+
+' ── Entry points (grey) ───────────────────────
+TestMain .[#888888].> DatabaseInstance : uses
+TestMain .[#888888].> ImportService    : calls
+
+
+' ═══════════════════════════════════════════════
+'  LEGEND
+' ═══════════════════════════════════════════════
+legend bottom right
+  |<#B3D7F2>    | **Models** – Domain entities & enums |
+  |<#FFF9C4>    | **Contracts** – Interfaces & abstract classes |
+  |<#C8E6C9>    | **Calculation** – Point-calculator strategies |
+  |<#E1BEE7>    | **DTO** – Data-transfer objects |
+  |<#FFCCBC>    | **Import** – File parsing & import pipeline |
+  |<#FFE0B2>    | **Network** – Spring controllers & config |
+  |<#B2DFDB>    | **Database** – Persistence layer |
+  |<#D6D6D6>    | **Entry Points** – main() classes |
+endlegend
+
+@enduml

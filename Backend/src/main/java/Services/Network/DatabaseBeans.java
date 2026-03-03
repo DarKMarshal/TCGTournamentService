@@ -4,6 +4,8 @@ import Database.Repositories.DatabaseInstance;
 import Database.Repositories.EventRepository;
 import Database.Repositories.ResultsRepository;
 import Database.Repositories.TournamentRepository;
+import Services.Contracts.IResultsRepository;
+import Services.Contracts.ITournamentRepository;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -34,12 +36,12 @@ public class DatabaseBeans {
     }
 
     @Bean
-    public TournamentRepository tournamentRepository() {
+    public ITournamentRepository tournamentRepository() {
         return new TournamentRepository(databaseInstance.getConnection());
     }
 
     @Bean
-    public ResultsRepository resultsRepository() {
+    public IResultsRepository resultsRepository() {
         return new ResultsRepository(databaseInstance.getConnection());
     }
 }

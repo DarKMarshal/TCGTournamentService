@@ -1,6 +1,8 @@
 package Database.Repositories;
 
 import Models.*;
+import Services.Contracts.IResultsRepository;
+import Services.Contracts.ITournamentRepository;
 import org.springframework.lang.NonNull;
 
 import java.sql.*;
@@ -8,9 +10,9 @@ import java.util.*;
 
 public class EventRepository implements Services.Contracts.IEventRepository {
     private final Connection connection;
-    private final ResultsRepository resultsRepository;
+    private final IResultsRepository resultsRepository;
     private final PlayerRepository playerRepository;
-    private final TournamentRepository tournamentRepository;
+    private final ITournamentRepository tournamentRepository;
 
     public EventRepository(Connection connection) {
         this.connection = connection;

@@ -1,0 +1,384 @@
+@startuml Backend – Layered Architecture
+' ═══════════════════════════════════════════════
+'  GLOBAL STYLE
+' ═══════════════════════════════════════════════
+top to bottom direction
+skinparam linetype ortho
+skinparam shadowing true
+skinparam defaultFontName  "Segoe UI"
+skinparam defaultFontSize  11
+skinparam nodesep  60
+skinparam ranksep  40
+
+skinparam package {
+    FontSize   14
+    FontStyle  bold
+    Style      rectangle
+}
+
+skinparam class {
+    FontSize              11
+    AttributeFontSize     10
+    StereotypeFontSize    9
+    BorderThickness       1.5
+}
+
+' ── Layer colours ─────────────────────────────
+skinparam packageBackgroundColor<<iservice>>  #FFF3CD
+skinparam packageBorderColor<<iservice>>      #D4A017
+skinparam packageBackgroundColor<<service>>   #FFE0B2
+skinparam packageBorderColor<<service>>       #EF6C00
+skinparam packageBackgroundColor<<dto>>       #F3E5F5
+skinparam packageBorderColor<<dto>>           #8E24AA
+skinparam packageBackgroundColor<<irepo>>     #FFF3CD
+skinparam packageBorderColor<<irepo>>         #D4A017
+skinparam packageBackgroundColor<<repo>>      #E0F2F1
+skinparam packageBorderColor<<repo>>          #00897B
+skinparam packageBackgroundColor<<domain>>    #DCEEFB
+skinparam packageBorderColor<<domain>>        #4A90D9
+
+
+' ═══════════════════════════════════════════════
+'  LAYER 1 – Service Interfaces  (top)
+' ═══════════════════════════════════════════════
+package "Service Interfaces" <<iservice>> {
+
+    interface IChampionshipPointCalculator <<interface>> #FFF9C4 {
+        + calculateChampionshipPoints(Tournament) : void
+    }
+
+    abstract class IImportService <<abstract>> #FFF9C4 {
+    }
+
+    abstract class IParseService <<abstract>> #FFF9C4 {
+        {static} parseEventFile : Event
+        {static} determineTournamentType : String
+        {static} parsePlayers : Map<String, Player>
+        {static} calculatePlayerStats : Map<String, PlayerMatchStats>
+        {static} parseDivisions : List<Tournament>
+        {static} parseStandings : List<Result>
+    }
+}
+
+
+' ═══════════════════════════════════════════════
+'  LAYER 2 – Service Implementations
+' ═══════════════════════════════════════════════
+package "Services" <<service>> {
+
+    class CasualPointCalculator #FFE0B2 {
+        + calculateChampionshipPoints(Tournament) : void
+    }
+
+    class ChallengePointCalculator #FFE0B2 {
+        + calculateChampionshipPoints(Tournament) : void
+        - calculatePoints(int, int) : int
+    }
+
+    class CupPointCalculator #FFE0B2 {
+        + calculateChampionshipPoints(Tournament) : void
+        - calculatePoints(int, int) : int
+    }
+
+    class FileUploadController <<@RestController>> #FFE0B2 {
+        - connection : Connection
+        - eventRepository : EventRepository
+        - messagingTemplate : SimpMessagingTemplate
+        --
+        + uploadTdfFile(MultipartFile) : ResponseEntity<String>
+    }
+
+    class TournamentWebSocketController <<@Controller>> #FFE0B2 {
+        - eventRepository : EventRepository
+        - tournamentRepository : TournamentRepository
+        - resultsRepository : ResultsRepository
+        --
+        + getAllEvents() : List<EventSummaryDTO>
+        + getEventDetails(EventDetailsRequest) : EventDetailsDTO
+    }
+
+    class WebSocketConfig <<@Configuration>> #FFE0B2 {
+        + configureMessageBroker(MessageBrokerRegistry) : void
+        + registerStompEndpoints(StompEndpointRegistry) : void
+    }
+
+    class DatabaseBeans <<@Configuration>> #FFE0B2 {
+        - databaseInstance : DatabaseInstance
+        --
+        + databaseConnection() : Connection
+        + eventRepository() : EventRepository
+        + tournamentRepository() : TournamentRepository
+        + resultsRepository() : ResultsRepository
+    }
+
+    class EventDetailsRequest #FFE0B2 {
+        - eventId : String
+    }
+
+    class ImportService #FFE0B2 {
+        + {static} retrieveEventInformation(Connection, String) : void
+    }
+
+    class TDFParseService #FFE0B2 {
+        + {static} parseEventFile(String, IPlayerRepository, IEventRepository) : Event
+        --
+        - {static} determineTournamentType(Document) : String
+        - {static} parsePlayers(Document, IPlayerRepository) : Map<String, Player>
+        - {static} calculatePlayerStats(Document) : Map<String, PlayerMatchStats>
+        - {static} parseDivisions(...) : List<Tournament>
+        - {static} parseStandings(...) : List<Result>
+    }
+}
+
+
+' ═══════════════════════════════════════════════
+'  LAYER 3 – DTOs
+' ═══════════════════════════════════════════════
+package "DTOs" <<dto>> {
+
+    class EventDetailsDTO <<record>> #E1BEE7 {
+        + id : String
+        + name : String
+        + divisions : List<DivisionDTO>
+    }
+
+    class DivisionDTO <<record>> #E1BEE7 {
+        + ageDivision : String
+        + tournamentType : String
+        + results : List<Result>
+    }
+
+    class EventSummaryDTO <<record>> #E1BEE7 {
+        + id : String
+        + name : String
+    }
+
+    class PlayerMatchStats #E1BEE7 {
+        - matchPoints : int
+        - matchesPlayed : int
+        - wins : int
+        - byes : int
+        - roundsParticipated : int
+        - isDropped : boolean
+        - totalTournamentRounds : int
+        - opponents : List<String>
+        - opponentWinPercentage : double
+        - opponentOpponentWinPercentage : double
+        --
+        + getWinPercentage() : double
+    }
+}
+
+
+' ═══════════════════════════════════════════════
+'  LAYER 4 – Repository Interfaces
+' ═══════════════════════════════════════════════
+package "Repository Interfaces" <<irepo>> {
+
+    interface IEventRepository <<interface>> #FFF9C4 {
+        + saveEvent(Event) : void
+        + deleteEvent(String) : void
+    }
+
+    interface IPlayerRepository <<interface>> #FFF9C4 {
+        + savePlayer(Player) : void
+        + getPlayerById(int) : Player
+        + getOrCreatePlayer(int, String) : Player
+        + getAllPlayers() : List<Player>
+        + updatePlayerChampionshipPoints(List<Result>) : void
+        + deletePlayer(int) : void
+    }
+
+    interface IResultsRepository <<interface>> #FFF9C4 {
+        + saveResults(String, String, List<Result>) : void
+        + getResultsByEventAndDivision(String, String) : List<Result>
+    }
+
+    interface ITournamentRepository <<interface>> #FFF9C4 {
+        + saveTournamentDivision(String, Tournament) : void
+        + getTournamentDivision(String) : Tournament
+        + getAllTournamentDivisions(String) : void
+        + findAllDivisions(String) : List<String[]>
+    }
+}
+
+
+' ═══════════════════════════════════════════════
+'  LAYER 5 – Repository Implementations
+' ═══════════════════════════════════════════════
+package "Repositories" <<repo>> {
+
+    class DatabaseInstance #B2DFDB {
+        - {static} INSTANCE : DatabaseInstance
+        - DBPATH : String
+        - connection : Connection
+        --
+        + {static} createInstance() : DatabaseInstance
+        + connect() : void
+        + disconnect() : void
+        + getConnection() : Connection
+    }
+
+    class DatabaseConfig #B2DFDB {
+        + {static} DB_PATH : String
+    }
+
+    class DBInitializer #B2DFDB {
+        + {static} initializeDatabase(String) : void
+        - {static} readSchemaFile() : String
+    }
+
+    class EventRepository #B2DFDB {
+        - connection : Connection
+        - resultsRepository : IResultsRepository
+        - playerRepository : PlayerRepository
+        - tournamentRepository : ITournamentRepository
+        --
+        + saveEvent(Event) : void
+        + getEventById(String) : Event
+        + deleteEvent(String) : void
+        + getAllEvents() : List<Event>
+    }
+
+    class PlayerRepository #B2DFDB {
+        - connection : Connection
+        --
+        + savePlayer(Player) : void
+        + getPlayerById(int) : Player
+        + getOrCreatePlayer(int, String) : Player
+        + getAllPlayers() : List<Player>
+        + updatePlayerChampionshipPoints(List<Result>) : void
+        + deletePlayer(int) : void
+    }
+
+    class ResultsRepository #B2DFDB {
+        - connection : Connection
+        --
+        + saveResults(String, String, List<Result>) : void
+        + getResultsByEventAndDivision(String, String) : List<Result>
+    }
+
+    class TournamentRepository #B2DFDB {
+        - connection : Connection
+        --
+        + saveTournamentDivision(String, Tournament) : void
+        + findAllDivisions(String) : List<String[]>
+    }
+}
+
+
+' ═══════════════════════════════════════════════
+'  LAYER 6 – Domain Objects  (bottom)
+' ═══════════════════════════════════════════════
+package "Domain Objects" <<domain>> {
+
+    enum AgeDivision #B3D7F2 {
+        Junior
+        Senior
+        Master
+    }
+
+    class Event #B3D7F2 {
+        - id : String
+        - name : String
+        - uploaderID : int
+        - divisions : List<Tournament>
+    }
+
+    class Tournament #B3D7F2 {
+        - ageDivision : AgeDivision
+        - tournamentType : String
+        - championshipPointCalculator : IChampionshipPointCalculator
+        - results : List<Result>
+        --
+        + calculateChampionshipPoints() : void
+    }
+
+    class Result #B3D7F2 {
+        - player : Player
+        - placement : int
+        - matchPoints : int
+        - opponentWinPercentage : double
+        - opponentOpponentWinPercentage : double
+        - championshipPointsEarned : int
+    }
+
+    class Player #B3D7F2 {
+        - id : int
+        - name : String
+        - championshipPoints : int
+    }
+}
+
+
+' ═══════════════════════════════════════════════
+'  RELATIONSHIPS  (composition & aggregation only)
+' ═══════════════════════════════════════════════
+
+' ── Service compositions / aggregations ───────
+FileUploadController          o-[#EF6C00]- EventRepository
+TournamentWebSocketController o-[#EF6C00]- EventRepository
+TournamentWebSocketController o-[#EF6C00]- TournamentRepository
+TournamentWebSocketController o-[#EF6C00]- ResultsRepository
+DatabaseBeans                 o-[#EF6C00]- DatabaseInstance
+ImportService                 o-[#E64A19]- TDFParseService
+
+' ── DTO compositions ──────────────────────────
+EventDetailsDTO "1" *-[#8E24AA]- "1..*" DivisionDTO      : divisions
+DivisionDTO     "1" *-[#8E24AA]- "0..*" Result           : results
+
+' ── Repository compositions ───────────────────
+EventRepository "1" *-[#00897B]- "1" IResultsRepository
+EventRepository "1" *-[#00897B]- "1" PlayerRepository
+EventRepository "1" *-[#00897B]- "1" ITournamentRepository
+DatabaseInstance     o-[#00897B]- DatabaseConfig           : reads DB_PATH
+DatabaseInstance     o-[#00897B]- DBInitializer            : initialises schema
+
+' ── Domain compositions & aggregations ────────
+Event      "1" *-[#4A90D9]- "0..*" Tournament  : divisions
+Tournament "1" *-[#4A90D9]- "0..*" Result      : results
+Tournament "1" o-[#4A90D9]- "1"    AgeDivision : ageDivision
+Tournament "1" o-[#4A90D9]- "1"    IChampionshipPointCalculator : calculator
+Result     "1" o-[#4A90D9]- "1"    Player      : player
+
+
+' ═══════════════════════════════════════════════
+'  HIDDEN LINKS  (enforce top → bottom ordering)
+' ═══════════════════════════════════════════════
+IChampionshipPointCalculator -[hidden]down- CasualPointCalculator
+IImportService               -[hidden]down- ImportService
+IParseService                -[hidden]down- TDFParseService
+
+CasualPointCalculator        -[hidden]down- EventDetailsDTO
+FileUploadController         -[hidden]down- DivisionDTO
+TDFParseService              -[hidden]down- PlayerMatchStats
+
+EventDetailsDTO              -[hidden]down- IEventRepository
+PlayerMatchStats             -[hidden]down- IPlayerRepository
+EventSummaryDTO              -[hidden]down- IResultsRepository
+DivisionDTO                  -[hidden]down- ITournamentRepository
+
+IEventRepository             -[hidden]down- EventRepository
+IPlayerRepository            -[hidden]down- PlayerRepository
+IResultsRepository           -[hidden]down- ResultsRepository
+ITournamentRepository        -[hidden]down- TournamentRepository
+
+EventRepository              -[hidden]down- Event
+PlayerRepository             -[hidden]down- Player
+TournamentRepository         -[hidden]down- Tournament
+ResultsRepository            -[hidden]down- Result
+
+
+' ═══════════════════════════════════════════════
+'  LEGEND
+' ═══════════════════════════════════════════════
+legend bottom right
+  |<#FFF9C4>    | **Interfaces** – Service & Repository contracts |
+  |<#FFE0B2>    | **Services** – Controllers, config & import |
+  |<#E1BEE7>    | **DTOs** – Data-transfer objects |
+  |<#B2DFDB>    | **Repositories** – Persistence layer |
+  |<#B3D7F2>    | **Domain** – Entities & enums |
+  |          | **◆──**  Composition  \|  **◇──**  Aggregation |
+endlegend
+
+@enduml

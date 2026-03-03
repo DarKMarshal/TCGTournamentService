@@ -9,13 +9,14 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 
-public class TournamentRepository {
+public class TournamentRepository implements Services.Contracts.ITournamentRepository {
     private final Connection connection;
 
     public TournamentRepository(Connection connection) {
         this.connection = connection;
     }
 
+    @Override
     public void saveTournamentDivision(String eventId, Tournament tournament) throws SQLException {
         String sqlDiv = "INSERT OR REPLACE INTO tournaments (event_id, age_division, tournament_type) VALUES (?, ?, ?)";
         try (PreparedStatement pstmt = connection.prepareStatement(sqlDiv)) {
@@ -26,10 +27,12 @@ public class TournamentRepository {
         }
     }
 
+    @Override
     public Tournament getTournamentDivision(String eventId) {
         return null;
     }
 
+    @Override
     public void getAllTournamentDivisions(String eventId){
 
     }
@@ -37,6 +40,7 @@ public class TournamentRepository {
     /**
      * Returns all divisions for a given event as [ageDivision, tournamentType] pairs.
      */
+    @Override
     public List<String[]> findAllDivisions(String eventId) {
         List<String[]> divisions = new ArrayList<>();
         String sql = "SELECT age_division, tournament_type FROM tournaments WHERE event_id = ? ORDER BY age_division";

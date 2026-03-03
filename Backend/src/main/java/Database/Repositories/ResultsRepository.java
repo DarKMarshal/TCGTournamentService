@@ -11,13 +11,14 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 
-public class ResultsRepository {
+public class ResultsRepository implements Services.Contracts.IResultsRepository {
     private final Connection connection;
 
     public ResultsRepository(Connection connection) {
         this.connection = connection;
     }
 
+    @Override
     public void saveResults(String eventId, String ageDivision, @NonNull List<Result> results) throws SQLException {
         String sqlResult = "INSERT OR REPLACE INTO results (event_id, age_division, player_id, placement, points, match_points, opponent_win_percentage, opponent_opponent_win_percentage) VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
         try (PreparedStatement pstmt = connection.prepareStatement(sqlResult)) {
@@ -39,6 +40,7 @@ public class ResultsRepository {
     /**
      * Returns all results for a given event and age division, with Player objects hydrated.
      */
+    @Override
     public List<Result> getResultsByEventAndDivision(String eventId, String ageDivision) {
         List<Result> results = new ArrayList<>();
         String sql = "SELECT r.placement, r.points, r.match_points, " +

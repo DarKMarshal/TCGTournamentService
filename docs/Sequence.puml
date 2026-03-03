@@ -1,0 +1,20 @@
+@startuml
+'https://plantuml.com/sequence-diagram
+
+autonumber
+
+==Flow==
+
+User -> ImportService: .tdf file
+ImportService -> TDFParser: parse .tdf file
+TDFParser ->ImportService: Event object
+ImportService -> User: Display Event object details for confirmation
+User -> ImportService: Confirm import
+ImportService -> EventRepository: save Event object
+EventRepository -> TournamentRepository: Save Divisions inside Event
+TournamentRepository -> ResultsRepository: Save individual results for each division
+TournamentRepository -> PlayerRepository: Save new players and update existing
+EventRepository -> ImportService: Confirm successful import
+ImportService -> User: Display success message and imported Event details
+
+@enduml
