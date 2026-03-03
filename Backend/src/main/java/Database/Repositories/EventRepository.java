@@ -79,4 +79,26 @@ public class EventRepository implements Services.Contracts.IEventRepository {
             e.printStackTrace();
         }
     }
+
+    /**
+     * Returns all events with empty division lists (lightweight, for event list display).
+     */
+    public List<Event> getAllEvents() {
+        List<Event> events = new ArrayList<>();
+        String sql = "SELECT id, name, uploader_id FROM events ORDER BY name";
+        try (Statement stmt = connection.createStatement();
+             ResultSet rs = stmt.executeQuery(sql)) {
+            while (rs.next()) {
+                events.add(new Event(
+                        rs.getString("id"),
+                        rs.getString("name"),
+                        rs.getInt("uploader_id"),
+                        new ArrayList<>()
+                ));
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return events;
+    }
 }

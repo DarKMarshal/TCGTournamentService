@@ -1,14 +1,16 @@
-import Database.Repositories.DatabaseInstance;
-import Services.ImportService.ImportService;
+import org.springframework.boot.SpringApplication;
+import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.boot.autoconfigure.jdbc.DataSourceAutoConfiguration;
+import org.springframework.boot.autoconfigure.jdbc.DataSourceTransactionManagerAutoConfiguration;
+import org.springframework.context.annotation.ComponentScan;
 
+@SpringBootApplication(exclude = {
+        DataSourceAutoConfiguration.class,
+        DataSourceTransactionManagerAutoConfiguration.class
+})
+@ComponentScan(basePackages = {"Services.Network", "Database"})
 public class Main {
     public static void main(String[] args) {
-        DatabaseInstance db = DatabaseInstance.createInstance();
-        String FilePath = "C:\\Users\\outfi\\IdeaProjects\\TCGTournamentService\\Backend\\src\\main\\resources\\Data\\Trailside Challenge_25-11-016498 FINAL.tdf";
-        db.connect();
-
-        ImportService.retrieveEventInformation(db.getConnection(), FilePath);
-
-        db.disconnect();
+        SpringApplication.run(Main.class, args);
     }
 }
