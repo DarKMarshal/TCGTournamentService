@@ -10,7 +10,5 @@ public interface ITournamentRepository {
 
     Tournament getTournamentDivision(String eventId);
 
-    void getAllTournamentDivisions(String eventId);
-
     List<String[]> findAllDivisions(String eventId);
 }

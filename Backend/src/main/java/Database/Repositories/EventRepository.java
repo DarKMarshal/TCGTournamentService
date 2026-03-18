@@ -68,7 +68,31 @@ public class EventRepository implements Services.Contracts.IEventRepository {
     }
 
     public Event getEventById(String id) {
-        return null;
+        Event event = null;
+        String sql = "SELECT * FROM events WHERE id = ?";
+        try (PreparedStatement pstmt = connection.prepareStatement(sql)) {
+            pstmt.setString(1, id);
+            ResultSet rs = pstmt.executeQuery();
+            if (rs.next()) {
+                event = new Event(
+                        rs.getString("id"),
+                        rs.getString("name"),
+                        rs.getInt("uploader_id"),
+                        tournamentRepository.findAllDivisions(id).stream()
+                                .map(div -> {
+                                    String stringAgeDivision = div[0];
+                                    String tournamentType = div[1];
+                                    List<Result> results = resultsRepository.getResultsByEventAndDivision(id, stringAgeDivision);
+                                    AgeDivision ageDivision = AgeDivision.valueOf(stringAgeDivision);
+                                    return new Tournament(ageDivision, tournamentType, results);
+                                })
+                                .toList()
+                );
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return event;
     }
 
     @Override

@@ -1,8 +1,8 @@
 package Services.Network;
 
-import Database.Repositories.EventRepository;
 import Models.Event;
 import Models.Result;
+import Services.Contracts.IEventRepository;
 import Services.Contracts.IResultsRepository;
 import Services.Contracts.ITournamentRepository;
 import Services.DTO.DivisionDTO;
@@ -18,13 +18,13 @@ import java.util.List;
 @Controller
 public class TournamentWebSocketController {
 
-    private final EventRepository eventRepository;
+    private final IEventRepository eventRepository;
     private final ITournamentRepository tournamentRepository;
     private final IResultsRepository resultsRepository;
 
     @Autowired
     public TournamentWebSocketController(
-            EventRepository eventRepository,
+            IEventRepository eventRepository,
             ITournamentRepository tournamentRepository,
             IResultsRepository resultsRepository
     ) {

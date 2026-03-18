@@ -32,10 +32,6 @@ public class TournamentRepository implements Services.Contracts.ITournamentRepos
         return null;
     }
 
-    @Override
-    public void getAllTournamentDivisions(String eventId){
-
-    }
 
     /**
      * Returns all divisions for a given event as [ageDivision, tournamentType] pairs.

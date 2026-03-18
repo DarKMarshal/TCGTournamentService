@@ -4,6 +4,7 @@ import Database.Repositories.DatabaseInstance;
 import Database.Repositories.EventRepository;
 import Database.Repositories.ResultsRepository;
 import Database.Repositories.TournamentRepository;
+import Services.Contracts.IEventRepository;
 import Services.Contracts.IResultsRepository;
 import Services.Contracts.ITournamentRepository;
 import org.springframework.context.annotation.Bean;
@@ -31,7 +32,7 @@ public class DatabaseBeans {
     }
 
     @Bean
-    public EventRepository eventRepository() {
+    public IEventRepository eventRepository() {
         return new EventRepository(databaseInstance.getConnection());
     }
 
