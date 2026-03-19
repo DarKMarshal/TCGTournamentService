@@ -1,6 +1,7 @@
 package Services.Network;
 
 import Database.Repositories.EventRepository;
+import Services.Contracts.IEventRepository;
 import Services.DTO.EventSummaryDTO;
 import Services.ImportService.ImportService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -27,13 +28,13 @@ import java.util.List;
 public class FileUploadController {
 
     private final Connection connection;
-    private final EventRepository eventRepository;
+    private final IEventRepository eventRepository;
     private final SimpMessagingTemplate messagingTemplate;
 
     @Autowired
     public FileUploadController(
             Connection connection,
-            EventRepository eventRepository,
+            IEventRepository eventRepository,
             SimpMessagingTemplate messagingTemplate
     ) {
         this.connection = connection;

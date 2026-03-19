@@ -7,7 +7,7 @@ import Services.Contracts.IImportService;
 
 import java.sql.Connection;
 
-public class ImportService extends IImportService {
+public class ImportService {
 
     // TODO: This may have to be changed to allow for multiple import types
     public static void retrieveEventInformation(Connection connection, String filepath) {
