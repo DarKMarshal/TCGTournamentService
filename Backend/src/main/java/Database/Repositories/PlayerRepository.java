@@ -1,5 +1,6 @@
 package Database.Repositories;
 
+import Models.AgeDivision;
 import Models.Player;
 import Models.Result;
 import org.springframework.lang.NonNull;
@@ -17,11 +18,12 @@ public class PlayerRepository implements Services.Contracts.IPlayerRepository {
 
     @Override
     public void savePlayer(@NonNull Player player) {
-        String sql = "INSERT OR REPLACE INTO players (id, name, championship_points) VALUES (?, ?, ?)";
+        String sql = "INSERT OR REPLACE INTO players (id, name, ageDivision, championship_points) VALUES (?, ?, ?, ?)";
         try (PreparedStatement pstmt = connection.prepareStatement(sql)) {
             pstmt.setInt(1, player.getId());
             pstmt.setString(2, player.getName());
-            pstmt.setInt(3, player.getChampionshipPoints());
+            pstmt.setString(3, player.getAgeDivision() != null ? player.getAgeDivision().name() : null);
+            pstmt.setInt(4, player.getChampionshipPoints());
             pstmt.executeUpdate();
         } catch (SQLException e) {
             e.printStackTrace();
@@ -35,11 +37,16 @@ public class PlayerRepository implements Services.Contracts.IPlayerRepository {
             pstmt.setInt(1, id);
             ResultSet rs = pstmt.executeQuery();
             if (rs.next()) {
-                return new Player(
+                Player player = new Player(
                         rs.getInt("id"),
                         rs.getString("name"),
                         rs.getInt("championship_points")
                 );
+                String ageDivisionStr = rs.getString("ageDivision");
+                if (ageDivisionStr != null) {
+                    player.setAgeDivision(AgeDivision.valueOf(ageDivisionStr));
+                }
+                return player;
             }
         } catch (SQLException e) {
             e.printStackTrace();
@@ -65,11 +72,16 @@ public class PlayerRepository implements Services.Contracts.IPlayerRepository {
         try (Statement stmt = connection.createStatement();
              ResultSet rs = stmt.executeQuery(sql)) {
             while (rs.next()) {
-                players.add(new Player(
+                Player player = new Player(
                         rs.getInt("id"),
                         rs.getString("name"),
                         rs.getInt("championship_points")
-                ));
+                );
+                String ageDivisionStr = rs.getString("ageDivision");
+                if (ageDivisionStr != null) {
+                    player.setAgeDivision(AgeDivision.valueOf(ageDivisionStr));
+                }
+                players.add(player);
             }
         } catch (SQLException e) {
             e.printStackTrace();
@@ -88,6 +100,19 @@ public class PlayerRepository implements Services.Contracts.IPlayerRepository {
                     pstmt.setInt(2, result.getPlayer().getId());
                     pstmt.addBatch();
                 }
+            }
+            pstmt.executeBatch();
+        }
+    }
+
+    @Override
+    public void updatePlayerAgeDivisions(@NonNull List<Result> results, @NonNull AgeDivision ageDivision) throws SQLException {
+        String sql = "UPDATE players SET ageDivision = ? WHERE id = ?";
+        try (PreparedStatement pstmt = connection.prepareStatement(sql)) {
+            for (Result result : results) {
+                pstmt.setString(1, ageDivision.name());
+                pstmt.setInt(2, result.getPlayer().getId());
+                pstmt.addBatch();
             }
             pstmt.executeBatch();
         }

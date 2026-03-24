@@ -1,6 +1,8 @@
 package Database.Repositories;
 
 import Models.*;
+import Services.Contracts.IResultsRepository;
+import Services.Contracts.ITournamentRepository;
 import org.springframework.lang.NonNull;
 
 import java.sql.*;
@@ -8,9 +10,9 @@ import java.util.*;
 
 public class EventRepository implements Services.Contracts.IEventRepository {
     private final Connection connection;
-    private final ResultsRepository resultsRepository;
+    private final IResultsRepository resultsRepository;
     private final PlayerRepository playerRepository;
-    private final TournamentRepository tournamentRepository;
+    private final ITournamentRepository tournamentRepository;
 
     public EventRepository(Connection connection) {
         this.connection = connection;
@@ -46,6 +48,7 @@ public class EventRepository implements Services.Contracts.IEventRepository {
                 tournamentRepository.saveTournamentDivision(event.getId(), tournament);
                 resultsRepository.saveResults(event.getId(), tournament.getAgeDivision().toString(), tournament.getResults());
                 playerRepository.updatePlayerChampionshipPoints(tournament.getResults());
+                playerRepository.updatePlayerAgeDivisions(tournament.getResults(), tournament.getAgeDivision());
             }
 
             connection.commit();
@@ -66,7 +69,31 @@ public class EventRepository implements Services.Contracts.IEventRepository {
     }
 
     public Event getEventById(String id) {
-        return null;
+        Event event = null;
+        String sql = "SELECT * FROM events WHERE id = ?";
+        try (PreparedStatement pstmt = connection.prepareStatement(sql)) {
+            pstmt.setString(1, id);
+            ResultSet rs = pstmt.executeQuery();
+            if (rs.next()) {
+                event = new Event(
+                        rs.getString("id"),
+                        rs.getString("name"),
+                        rs.getInt("uploader_id"),
+                        tournamentRepository.findAllDivisions(id).stream()
+                                .map(div -> {
+                                    String stringAgeDivision = div[0];
+                                    String tournamentType = div[1];
+                                    List<Result> results = resultsRepository.getResultsByEventAndDivision(id, stringAgeDivision);
+                                    AgeDivision ageDivision = AgeDivision.valueOf(stringAgeDivision);
+                                    return new Tournament(ageDivision, tournamentType, results);
+                                })
+                                .toList()
+                );
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return event;
     }
 
     @Override
@@ -78,5 +105,27 @@ public class EventRepository implements Services.Contracts.IEventRepository {
         } catch (SQLException e) {
             e.printStackTrace();
         }
+    }
+
+    /**
+     * Returns all events with empty division lists (lightweight, for event list display).
+     */
+    public List<Event> getAllEvents() {
+        List<Event> events = new ArrayList<>();
+        String sql = "SELECT id, name, uploader_id FROM events ORDER BY name";
+        try (Statement stmt = connection.createStatement();
+             ResultSet rs = stmt.executeQuery(sql)) {
+            while (rs.next()) {
+                events.add(new Event(
+                        rs.getString("id"),
+                        rs.getString("name"),
+                        rs.getInt("uploader_id"),
+                        new ArrayList<>()
+                ));
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return events;
     }
 }
