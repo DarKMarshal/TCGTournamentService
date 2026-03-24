@@ -48,6 +48,7 @@ public class EventRepository implements Services.Contracts.IEventRepository {
                 tournamentRepository.saveTournamentDivision(event.getId(), tournament);
                 resultsRepository.saveResults(event.getId(), tournament.getAgeDivision().toString(), tournament.getResults());
                 playerRepository.updatePlayerChampionshipPoints(tournament.getResults());
+                playerRepository.updatePlayerAgeDivisions(tournament.getResults(), tournament.getAgeDivision());
             }
 
             connection.commit();

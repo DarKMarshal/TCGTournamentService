@@ -6,6 +6,7 @@
 CREATE TABLE IF NOT EXISTS players (
     id                  INTEGER PRIMARY KEY,
     name                TEXT NOT NULL,
+    ageDivision         TEXT,
     championship_points INTEGER DEFAULT 0
 );
 

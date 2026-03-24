@@ -1,5 +1,6 @@
 package Services.Contracts;
 
+import Models.AgeDivision;
 import Models.Player;
 import Models.Result;
 import org.springframework.lang.NonNull;
@@ -17,6 +18,8 @@ public interface IPlayerRepository {
     List<Player> getAllPlayers();
 
     void updatePlayerChampionshipPoints(@NonNull List<Result> results) throws SQLException;
+
+    void updatePlayerAgeDivisions(@NonNull List<Result> results, AgeDivision ageDivision) throws SQLException;
 
     void deletePlayer(int id);
 }

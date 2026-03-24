@@ -16,9 +16,10 @@ public class TDFParseService extends IParseService{
         Document doc = builder.parse(xmlFile);
         doc.getDocumentElement().normalize();
 
-        // Extract tournament name and ID
+        // Extract tournament name, ID, and date
         String EventName = getElementText(doc, "name");
         String EventID = getElementText(doc, "id");
+        String EventDate = getElementText(doc, "startdate");
 
         // Determine tournament type from mode
         String EventType = determineTournamentType(doc);
@@ -259,6 +260,17 @@ public class TDFParseService extends IParseService{
             if (playerNodes.getLength() == 0) continue;
 
             AgeDivision ageDivision = getAgeDivisionFromCategory(category);
+            
+            // Set the age division on each player in this pod
+            for (int j = 0; j < playerNodes.getLength(); j++) {
+                Element playerElement = (Element) playerNodes.item(j);
+                String playerId = playerElement.getAttribute("id");
+                Player player = playerMap.get(playerId);
+                if (player != null) {
+                    player.setAgeDivision(ageDivision);
+                }
+            }
+            
             List<Result> results = parseStandings(pod, playerMap, playerStats);
 
             if (!results.isEmpty()) {
