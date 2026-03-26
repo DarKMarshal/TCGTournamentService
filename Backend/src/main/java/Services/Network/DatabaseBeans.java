@@ -1,10 +1,8 @@
 package Services.Network;
 
-import Database.Repositories.DatabaseInstance;
-import Database.Repositories.EventRepository;
-import Database.Repositories.ResultsRepository;
-import Database.Repositories.TournamentRepository;
+import Database.Repositories.*;
 import Services.Contracts.IEventRepository;
+import Services.Contracts.IPlayerRepository;
 import Services.Contracts.IResultsRepository;
 import Services.Contracts.ITournamentRepository;
 import org.springframework.context.annotation.Bean;
@@ -44,5 +42,10 @@ public class DatabaseBeans {
     @Bean
     public IResultsRepository resultsRepository() {
         return new ResultsRepository(databaseInstance.getConnection());
+    }
+
+    @Bean
+    public IPlayerRepository playerRepository() {
+        return new PlayerRepository(databaseInstance.getConnection());
     }
 }

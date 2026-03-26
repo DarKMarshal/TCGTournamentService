@@ -90,6 +90,28 @@ public class PlayerRepository implements Services.Contracts.IPlayerRepository {
     }
 
     @Override
+    public List<Player> getPlayersByAgeDivision(AgeDivision ageDivision) {
+        List<Player> players = new ArrayList<>();
+        String sql = "SELECT * FROM players WHERE ageDivision = ?";
+        try (PreparedStatement pstmt = connection.prepareStatement(sql)) {
+            pstmt.setString(1, ageDivision.name());
+            ResultSet rs = pstmt.executeQuery();
+            while (rs.next()) {
+                Player player = new Player(
+                        rs.getInt("id"),
+                        rs.getString("name"),
+                        rs.getInt("championship_points")
+                );
+                player.setAgeDivision(ageDivision);
+                players.add(player);
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return players;
+    }
+
+    @Override
     public void updatePlayerChampionshipPoints(@NonNull List<Result> results) throws SQLException {
         String sql = "UPDATE players SET championship_points = championship_points + ? WHERE id = ?";
         try (PreparedStatement pstmt = connection.prepareStatement(sql)) {

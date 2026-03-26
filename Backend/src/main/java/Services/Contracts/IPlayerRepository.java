@@ -17,6 +17,8 @@ public interface IPlayerRepository {
 
     List<Player> getAllPlayers();
 
+    List<Player> getPlayersByAgeDivision(AgeDivision ageDivision);
+
     void updatePlayerChampionshipPoints(@NonNull List<Result> results) throws SQLException;
 
     void updatePlayerAgeDivisions(@NonNull List<Result> results, AgeDivision ageDivision) throws SQLException;
