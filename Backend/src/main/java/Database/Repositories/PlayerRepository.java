@@ -58,6 +58,7 @@ public class PlayerRepository implements Services.Contracts.IPlayerRepository {
     public Player getOrCreatePlayer(int id, String name) {
         Player existing = getPlayerById(id);
         if (existing == null) {
+            // TODO: Add try catch for invalid ID entries
             Player newPlayer = new Player(id, name);
             savePlayer(newPlayer);
             return newPlayer;

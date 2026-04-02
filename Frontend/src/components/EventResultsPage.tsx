@@ -33,10 +33,10 @@ export default function EventResultsPage() {
     return <p className="empty-state">Event not found.</p>;
   }
 
-  const DIVISION_ORDER = ["MASTERS", "SENIORS", "JUNIORS"];
+  const DIVISION_ORDER = ["Master", "Senior", "Junior"];
   const divisions: Division[] = [...details.divisions].sort((a, b) => {
-    const aIdx = DIVISION_ORDER.indexOf(a.ageDivision.toUpperCase());
-    const bIdx = DIVISION_ORDER.indexOf(b.ageDivision.toUpperCase());
+    const aIdx = DIVISION_ORDER.indexOf(a.ageDivision);
+    const bIdx = DIVISION_ORDER.indexOf(b.ageDivision);
     return (aIdx === -1 ? 999 : aIdx) - (bIdx === -1 ? 999 : bIdx);
   });
 

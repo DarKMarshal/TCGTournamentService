@@ -35,3 +35,16 @@ export interface EventDetails {
   name: string;
   divisions: Division[];
 }
+
+/** Mirrors Backend Services.DTO.PlayerDTO */
+export interface PlayerDTO {
+  id: number;
+  name: string;
+  championshipPoints: number;
+}
+
+/** Mirrors Backend Services.DTO.LeaderboardDTO */
+export interface LeaderboardDTO {
+  ageDivision: string;
+  players: PlayerDTO[];
+}
