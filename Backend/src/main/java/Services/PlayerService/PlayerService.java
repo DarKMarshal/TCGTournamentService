@@ -2,9 +2,11 @@ package Services.PlayerService;
 
 import Database.Repositories.PlayerRepository;
 import Models.AgeDivision;
+import Models.Player;
 import Services.Contracts.IPlayerRepository;
 import Services.DTO.LeaderboardDTO;
 import Services.DTO.PlayerDTO;
+import org.jetbrains.annotations.Contract;
 import org.springframework.lang.NonNull;
 
 import java.sql.Connection;
@@ -30,6 +32,19 @@ public class PlayerService {
                 .map(p -> new PlayerDTO(p.getId(), p.getName(), p.getChampionshipPoints()))
                 .toList();
         return new LeaderboardDTO(ageDivision.name(), playerDTOs);
+    }
+
+    @NonNull
+    @Contract("_, _ -> new")
+    public static PlayerDTO getPlayerById(Connection connection, int id){
+        IPlayerRepository playerRepository = new PlayerRepository(connection);
+        Player player = playerRepository.getPlayerById(id);
+        return new PlayerDTO(player.getId(), player.getName(), player.getChampionshipPoints());
+    }
+
+    public static void manuallySavePlayer(Connection connection, @NonNull PlayerDTO playerDTO){
+        IPlayerRepository playerRepository = new PlayerRepository(connection);
+        playerRepository.savePlayer(new Player(playerDTO.id(), playerDTO.name(), playerDTO.championshipPoints()));
     }
 
 }

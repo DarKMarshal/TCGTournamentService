@@ -16,12 +16,10 @@ import java.util.List;
 @RequestMapping("/api/leaderboard")
 public class LeaderboardController {
 
-    private final IPlayerRepository playerRepository;
     private final Connection connection;
 
     @Autowired
-    public LeaderboardController(Connection connection, IPlayerRepository playerRepository) {
-        this.playerRepository = playerRepository;
+    public LeaderboardController(Connection connection) {
         this.connection = connection;
     }
 
