@@ -26,6 +26,7 @@ export interface Division {
 export interface EventSummary {
   id: string;
   name: string;
+  winners: Record<string, string>;
 }
 
 /** Mirrors Backend Services.Network.EventDetailsDTO */
