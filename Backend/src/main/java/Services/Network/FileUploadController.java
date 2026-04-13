@@ -1,8 +1,7 @@
 package Services.Network;
 
-import Database.Repositories.EventRepository;
 import Services.Contracts.IEventRepository;
-import Services.DTO.EventSummaryDTO;
+import Services.DTO.Event.EventSummaryDTO;
 import Services.ImportService.ImportService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;

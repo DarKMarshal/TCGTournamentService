@@ -71,7 +71,7 @@ export default function LeaderboardPage() {
             </thead>
             <tbody>
               {players.map((player, index) => (
-                <tr key={player.id}>
+                <tr key={`${player.id}-${index}`}>
                   <td className="cell-center">{index + 1}</td>
                   <td>{player.name}</td>
                   <td className="cell-center">{player.championshipPoints}</td>

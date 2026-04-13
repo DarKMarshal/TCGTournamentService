@@ -1,7 +1,8 @@
-package Services.DTO;
+package Services.DTO.Leaderboard;
 
 import java.util.List;
-import Models.Player;
+
+import Services.DTO.Event.PlayerDTO;
 
 public record LeaderboardDTO(String ageDivision, List<PlayerDTO> players) {
 }

@@ -1,6 +1,7 @@
 package Services.Network;
 
 import Database.Repositories.*;
+import Services.Contracts.IAccountRepository;
 import Services.Contracts.IEventRepository;
 import Services.Contracts.IPlayerRepository;
 import Services.Contracts.IResultsRepository;
@@ -47,5 +48,10 @@ public class DatabaseBeans {
     @Bean
     public IPlayerRepository playerRepository() {
         return new PlayerRepository(databaseInstance.getConnection());
+    }
+
+    @Bean
+    public IAccountRepository accountRepository() {
+        return new AccountRepository(databaseInstance.getConnection());
     }
 }

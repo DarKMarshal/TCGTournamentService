@@ -4,8 +4,9 @@ import Database.Repositories.PlayerRepository;
 import Models.AgeDivision;
 import Models.Player;
 import Services.Contracts.IPlayerRepository;
-import Services.DTO.LeaderboardDTO;
-import Services.DTO.PlayerDTO;
+import Services.DTO.Leaderboard.LeaderboardDTO;
+import Services.DTO.Account.PersonalPage.PersonalPlayerDTO;
+import Services.DTO.Event.PlayerDTO;
 import org.jetbrains.annotations.Contract;
 import org.springframework.lang.NonNull;
 
@@ -29,20 +30,20 @@ public class PlayerService {
         IPlayerRepository playerRepository = new PlayerRepository(connection);
         List<PlayerDTO> playerDTOs = playerRepository.getPlayersByAgeDivision(ageDivision)
                 .stream()
-                .map(p -> new PlayerDTO(p.getId(), p.getName(), p.getChampionshipPoints()))
+                .map(p -> new PlayerDTO(p.getName(), p.getChampionshipPoints()))
                 .toList();
         return new LeaderboardDTO(ageDivision.name(), playerDTOs);
     }
 
     @NonNull
     @Contract("_, _ -> new")
-    public static PlayerDTO getPlayerById(Connection connection, int id){
+    public static PersonalPlayerDTO getPlayerById(Connection connection, int id){
         IPlayerRepository playerRepository = new PlayerRepository(connection);
         Player player = playerRepository.getPlayerById(id);
-        return new PlayerDTO(player.getId(), player.getName(), player.getChampionshipPoints());
+        return new PersonalPlayerDTO(player.getId(), player.getName(), player.getChampionshipPoints());
     }
 
-    public static void manuallySavePlayer(Connection connection, @NonNull PlayerDTO playerDTO){
+    public static void manuallySavePlayer(Connection connection, @NonNull PersonalPlayerDTO playerDTO){
         IPlayerRepository playerRepository = new PlayerRepository(connection);
         playerRepository.savePlayer(new Player(playerDTO.id(), playerDTO.name(), playerDTO.championshipPoints()));
     }

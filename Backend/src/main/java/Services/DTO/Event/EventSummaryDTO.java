@@ -1,4 +1,4 @@
-package Services.DTO;
+package Services.DTO.Event;
 
 import java.util.Map;
 

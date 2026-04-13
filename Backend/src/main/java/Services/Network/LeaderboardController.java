@@ -1,8 +1,7 @@
 package Services.Network;
 
 import Models.AgeDivision;
-import Services.Contracts.IPlayerRepository;
-import Services.DTO.LeaderboardDTO;
+import Services.DTO.Leaderboard.LeaderboardDTO;
 import Services.PlayerService.PlayerService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;

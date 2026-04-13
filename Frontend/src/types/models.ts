@@ -48,3 +48,55 @@ export interface LeaderboardDTO {
   ageDivision: string;
   players: PlayerDTO[];
 }
+
+/** Mirrors Backend Services.DTO.AccountResponse */
+export interface AccountResponse {
+  id: number;
+  username: string;
+  playerId: number;
+  dateOfBirth: string;
+  role: "PLAYER" | "ORGANIZER" | "ADMIN";
+}
+
+/** Mirrors Backend Services.DTO.SignupRequest */
+export interface SignupRequest {
+  username: string;
+  playerId: number;
+  dateOfBirth: string;
+  password: string;
+}
+
+/** Mirrors Backend Services.DTO.LoginRequest */
+export interface LoginRequest {
+  username: string;
+  password: string;
+}
+
+/** Mirrors Backend Services.DTO.PersonalPlayerDTO */
+export interface PersonalPlayerDTO {
+  id: number;
+  name: string;
+  championshipPoints: number;
+}
+
+/** Mirrors Backend Services.DTO.PersonalResultDTO */
+export interface PersonalResultDTO {
+  eventId: string;
+  eventName: string;
+  ageDivision: string;
+  placement: number;
+  pointsEarned: number;
+}
+
+/** Mirrors Backend Services.DTO.PersonalEventDTO */
+export interface PersonalEventDTO {
+  id: string;
+  name: string;
+}
+
+/** Mirrors Backend Services.DTO.PersonalDataDTO */
+export interface PersonalDataDTO {
+  player: PersonalPlayerDTO | null;
+  results: PersonalResultDTO[];
+  uploadedEvents: PersonalEventDTO[];
+}

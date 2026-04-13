@@ -1,5 +1,18 @@
 
 -- =========================================
+-- Accounts
+-- =========================================
+
+CREATE TABLE IF NOT EXISTS accounts (
+    id              INTEGER PRIMARY KEY AUTOINCREMENT,
+    username        TEXT NOT NULL UNIQUE,
+    player_id       INTEGER NOT NULL,
+    date_of_birth   TEXT NOT NULL,
+    password_hash   TEXT NOT NULL,
+    role            TEXT NOT NULL DEFAULT 'PLAYER'
+);
+
+-- =========================================
 -- Players
 -- =========================================
 
