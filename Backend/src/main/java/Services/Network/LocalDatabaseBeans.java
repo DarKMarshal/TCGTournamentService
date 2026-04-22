@@ -1,35 +1,30 @@
 package Services.Network;
 
-import Database.Repositories.DatabaseInstance;
-import Database.Repositories.EventRepository;
-import Database.Repositories.ResultsRepository;
-import Database.Repositories.TournamentRepository;
+import Database.Repositories.*;
+import Services.Contracts.IAccountRepository;
 import Services.Contracts.IEventRepository;
+import Services.Contracts.IPlayerRepository;
 import Services.Contracts.IResultsRepository;
 import Services.Contracts.ITournamentRepository;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-
-import java.sql.Connection;
+import org.springframework.context.annotation.Profile;
 
 /**
- * Bridges the manually-managed DatabaseInstance into Spring's DI context
+ * Bridges the manually managed DatabaseInstance into Spring's DI context
  * so that controllers can inject repositories.
  */
 @Configuration
-public class DatabaseBeans {
+@Profile("local")
+public class LocalDatabaseBeans {
 
     private final DatabaseInstance databaseInstance;
 
-    public DatabaseBeans() {
+    public LocalDatabaseBeans() {
         this.databaseInstance = DatabaseInstance.createInstance();
         this.databaseInstance.connect();
     }
 
-    @Bean
-    public Connection databaseConnection() {
-        return databaseInstance.getConnection();
-    }
 
     @Bean
     public IEventRepository eventRepository() {
@@ -44,5 +39,15 @@ public class DatabaseBeans {
     @Bean
     public IResultsRepository resultsRepository() {
         return new ResultsRepository(databaseInstance.getConnection());
+    }
+
+    @Bean
+    public IPlayerRepository playerRepository() {
+        return new PlayerRepository(databaseInstance.getConnection());
+    }
+
+    @Bean
+    public IAccountRepository accountRepository() {
+        return new AccountRepository(databaseInstance.getConnection());
     }
 }

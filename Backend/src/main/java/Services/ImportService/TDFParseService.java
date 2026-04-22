@@ -2,7 +2,7 @@ package Services.ImportService;
 
 import Models.*;
 import Services.Contracts.*;
-import Services.DTO.PlayerMatchStats;
+import Services.DTO.Event.PlayerMatchStats;
 import org.w3c.dom.*;
 import javax.xml.parsers.*;
 import java.io.File;

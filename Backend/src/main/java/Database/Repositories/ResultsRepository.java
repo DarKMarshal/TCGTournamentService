@@ -2,8 +2,10 @@ package Database.Repositories;
 
 import Models.Player;
 import Models.Result;
+import Services.DTO.Account.PersonalPage.PersonalResultDTO;
 import org.springframework.lang.NonNull;
 
+import javax.sql.DataSource;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -13,15 +15,49 @@ import java.util.List;
 
 public class ResultsRepository implements Services.Contracts.IResultsRepository {
     private final Connection connection;
+    private final DataSource dataSource;
 
     public ResultsRepository(Connection connection) {
         this.connection = connection;
+        this.dataSource = null;
+    }
+
+    public ResultsRepository(DataSource dataSource) {
+        this.dataSource = dataSource;
+        this.connection = null;
+    }
+
+    private Connection getConn() throws SQLException {
+        if (dataSource != null) {
+            return dataSource.getConnection();
+        } else {
+            return ConnectionUtil.nonClosing(connection);
+        }
     }
 
     @Override
     public void saveResults(String eventId, String ageDivision, @NonNull List<Result> results) throws SQLException {
         String sqlResult = "INSERT OR REPLACE INTO results (event_id, age_division, player_id, placement, points, match_points, opponent_win_percentage, opponent_opponent_win_percentage) VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
-        try (PreparedStatement pstmt = connection.prepareStatement(sqlResult)) {
+        try (Connection conn = getConn();
+             PreparedStatement pstmt = conn.prepareStatement(sqlResult)) {
+            for (Result res : results) {
+                pstmt.setString(1, eventId);
+                pstmt.setString(2, ageDivision);
+                pstmt.setInt(3, res.getPlayer().getId());
+                pstmt.setInt(4, res.getPlacement());
+                pstmt.setInt(5, res.getChampionshipPointsEarned());
+                pstmt.setInt(6, res.getMatchPoints());
+                pstmt.setDouble(7, res.getOpponentWinPercentage());
+                pstmt.setDouble(8, res.getOpponentOpponentWinPercentage());
+                pstmt.addBatch();
+            }
+            pstmt.executeBatch();
+        }
+    }
+
+    public void saveResults(Connection conn, String eventId, String ageDivision, @NonNull List<Result> results) throws SQLException {
+        String sqlResult = "INSERT OR REPLACE INTO results (event_id, age_division, player_id, placement, points, match_points, opponent_win_percentage, opponent_opponent_win_percentage) VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
+        try (PreparedStatement pstmt = conn.prepareStatement(sqlResult)) {
             for (Result res : results) {
                 pstmt.setString(1, eventId);
                 pstmt.setString(2, ageDivision);
@@ -50,7 +86,8 @@ public class ResultsRepository implements Services.Contracts.IResultsRepository 
                 "JOIN players p ON r.player_id = p.id " +
                 "WHERE r.event_id = ? AND r.age_division = ? " +
                 "ORDER BY r.placement ASC";
-        try (PreparedStatement pstmt = connection.prepareStatement(sql)) {
+        try (Connection conn = getConn();
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
             pstmt.setString(1, eventId);
             pstmt.setString(2, ageDivision);
             ResultSet rs = pstmt.executeQuery();
@@ -69,6 +106,33 @@ public class ResultsRepository implements Services.Contracts.IResultsRepository 
                 );
                 result.setChampionshipPointsEarned(rs.getInt("points"));
                 results.add(result);
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return results;
+    }
+
+    @Override
+    public List<PersonalResultDTO> findResultsByPlayerId(int playerId) {
+        List<PersonalResultDTO> results = new ArrayList<>();
+        String sql = "SELECT r.event_id, e.name AS event_name, r.age_division, r.placement, r.points " +
+                "FROM results r " +
+                "JOIN events e ON r.event_id = e.id " +
+                "WHERE r.player_id = ? " +
+                "ORDER BY e.name, r.age_division";
+        try (Connection conn = getConn();
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+            pstmt.setInt(1, playerId);
+            ResultSet rs = pstmt.executeQuery();
+            while (rs.next()) {
+                results.add(new PersonalResultDTO(
+                        rs.getString("event_id"),
+                        rs.getString("event_name"),
+                        rs.getString("age_division"),
+                        rs.getInt("placement"),
+                        rs.getInt("points")
+                ));
             }
         } catch (SQLException e) {
             e.printStackTrace();

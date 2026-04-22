@@ -1,7 +1,7 @@
 package Services.Contracts;
 
 import Models.*;
-import Services.DTO.PlayerMatchStats;
+import Services.DTO.Event.PlayerMatchStats;
 
 import java.util.List;
 import java.util.Map;

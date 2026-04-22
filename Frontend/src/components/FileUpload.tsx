@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { authFetch } from "../utils/authFetch";
 
 export default function FileUpload() {
   const [status, setStatus] = useState<"idle" | "uploading" | "success" | "error">("idle");
@@ -23,7 +24,7 @@ export default function FileUpload() {
     formData.append("file", file);
 
     try {
-      const res = await fetch("/api/upload", { method: "POST", body: formData });
+      const res = await authFetch("/api/upload", { method: "POST", body: formData });
       const text = await res.text();
 
       if (res.ok) {

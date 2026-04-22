@@ -1,57 +1,64 @@
-import { useCallback, useEffect, useState } from "react";
-import { useStompClient } from "./hooks/useStompClient";
-import EventPicker from "./components/EventPicker";
-import ResultsTable from "./components/ResultsTable";
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { AuthProvider, useAuth } from "./context/AuthContext";
+import HomePage from "./components/HomePage";
+import EventResultsPage from "./components/EventResultsPage";
 import FileUpload from "./components/FileUpload";
-import type { EventDetails } from "./types/models";
+import LeaderboardPage from "./components/LeaderboardPage";
+import SignupPage from "./components/SignupPage";
+import LoginPage from "./components/LoginPage";
+import AdminPanel from "./components/AdminPanel";
+import PersonalPage from "./components/PersonalPage";
+import NavBar from "./components/NavBar";
 import "./App.css";
 
+function RequireAuth({ children }: { children: React.ReactNode }) {
+  const { account } = useAuth();
+  if (!account) return <Navigate to="/login" replace />;
+  return <>{children}</>;
+}
+
+function RequireOrganizer({ children }: { children: React.ReactNode }) {
+  const { account, isOrganizer } = useAuth();
+  if (!account) return <Navigate to="/login" replace />;
+  if (!isOrganizer) return <Navigate to="/" replace />;
+  return <>{children}</>;
+}
+
+function RequireAdmin({ children }: { children: React.ReactNode }) {
+  const { account, isAdmin } = useAuth();
+  if (!account) return <Navigate to="/login" replace />;
+  if (!isAdmin) return <Navigate to="/" replace />;
+  return <>{children}</>;
+}
+
+function RedirectIfAuthenticated({ children }: { children: React.ReactNode }) {
+  const { account } = useAuth();
+  if (account) return <Navigate to="/" replace />;
+  return <>{children}</>;
+}
+
 function App() {
-  const { connected, subscribe, publish } = useStompClient();
-  const [eventDetails, setEventDetails] = useState<EventDetails | null>(null);
-
-  // Subscribe to event details topic
-  useEffect(() => {
-    if (!connected) return;
-    return subscribe<EventDetails>("/topic/event/details", setEventDetails);
-  }, [connected, subscribe]);
-
-  // When an event is selected, request its full details
-  const handleEventSelect = useCallback(
-    (eventId: string) => {
-      setEventDetails(null); // clear while loading
-      publish("/app/event/details", { eventId });
-    },
-    [publish],
-  );
-
   return (
-    <div className="app">
-      <header className="app-header">
-        <h1>TCG Tournament Service</h1>
-        <span className="connection-badge" data-connected={connected}>
-          {connected ? "● Connected" : "○ Disconnected"}
-        </span>
-      </header>
-
-      <div className="toolbar">
-        <EventPicker
-          connected={connected}
-          subscribe={subscribe}
-          publish={publish}
-          onSelect={handleEventSelect}
-        />
-        <FileUpload />
-      </div>
-
-      <main className="app-main">
-        {eventDetails ? (
-          <ResultsTable event={eventDetails} />
-        ) : (
-          <p className="empty-state">Select an event above to view results.</p>
-        )}
-      </main>
-    </div>
+    <BrowserRouter>
+      <AuthProvider>
+        <div className="app">
+          <header className="app-header">
+            <h1>Your Elite Four</h1>
+          </header>
+          <NavBar />
+          <Routes>
+            <Route path="/" element={<HomePage />} />
+            <Route path="/event/:eventId" element={<EventResultsPage />} />
+            <Route path="/upload" element={<RequireOrganizer><FileUpload /></RequireOrganizer>} />
+            <Route path="/leaderboard" element={<LeaderboardPage />} />
+            <Route path="/signup" element={<RedirectIfAuthenticated><SignupPage /></RedirectIfAuthenticated>} />
+            <Route path="/login" element={<RedirectIfAuthenticated><LoginPage /></RedirectIfAuthenticated>} />
+            <Route path="/personal" element={<RequireAuth><PersonalPage /></RequireAuth>} />
+            <Route path="/admin" element={<RequireAdmin><AdminPanel /></RequireAdmin>} />
+          </Routes>
+        </div>
+      </AuthProvider>
+    </BrowserRouter>
   );
 }
 

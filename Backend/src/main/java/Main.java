@@ -8,7 +8,7 @@ import org.springframework.context.annotation.ComponentScan;
         DataSourceAutoConfiguration.class,
         DataSourceTransactionManagerAutoConfiguration.class
 })
-@ComponentScan(basePackages = {"Services.Network", "Database"})
+@ComponentScan(basePackages = {"Services.Network", "Services.Security", "Database"})
 public class Main {
     public static void main(String[] args) {
         SpringApplication.run(Main.class, args);

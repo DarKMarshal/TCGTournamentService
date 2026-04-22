@@ -5,73 +5,96 @@ import Services.Contracts.IResultsRepository;
 import Services.Contracts.ITournamentRepository;
 import org.springframework.lang.NonNull;
 
+import javax.sql.DataSource;
 import java.sql.*;
 import java.util.*;
 
 public class EventRepository implements Services.Contracts.IEventRepository {
     private final Connection connection;
+    private final DataSource dataSource;
     private final IResultsRepository resultsRepository;
     private final PlayerRepository playerRepository;
     private final ITournamentRepository tournamentRepository;
 
     public EventRepository(Connection connection) {
         this.connection = connection;
+        this.dataSource = null;
         this.resultsRepository = new ResultsRepository(connection);
         this.playerRepository = new PlayerRepository(connection);
         this.tournamentRepository = new TournamentRepository(connection);
+    }
 
+    public EventRepository(DataSource dataSource) {
+        this.dataSource = dataSource;
+        this.connection = null;
+        this.resultsRepository = new ResultsRepository(dataSource);
+        this.playerRepository = new PlayerRepository(dataSource);
+        this.tournamentRepository = new TournamentRepository(dataSource);
+    }
+
+    private Connection getConn() throws SQLException {
+        if (dataSource != null) {
+            return dataSource.getConnection();
+        } else {
+            return ConnectionUtil.nonClosing(connection);
+        }
     }
 
     @Override
     public void saveEvent(@NonNull Event event) {
-        try {
-            connection.setAutoCommit(false);
+        try (Connection conn = getConn()) {
+            conn.setAutoCommit(false);
 
-            // 1. Save Event
-            String sqlEvent = "INSERT OR REPLACE INTO events (id, name, uploader_id) VALUES (?, ?, ?)";
-            try (PreparedStatement pstmt = connection.prepareStatement(sqlEvent)) {
-                pstmt.setString(1, event.getId());
-                pstmt.setString(2, event.getName());
-                pstmt.setInt(3, event.getUploaderID());
-                pstmt.executeUpdate();
-            }
-
-            // 2. Clear old divisions (Cascade will handle results)
-            String sqlDeleteDiv = "DELETE FROM tournaments WHERE event_id = ?";
-            try (PreparedStatement pstmt = connection.prepareStatement(sqlDeleteDiv)) {
-                pstmt.setString(1, event.getId());
-                pstmt.executeUpdate();
-            }
-
-            // 3. Save Divisions and Results
-            for (Tournament tournament : event.getDivisions()){
-                tournamentRepository.saveTournamentDivision(event.getId(), tournament);
-                resultsRepository.saveResults(event.getId(), tournament.getAgeDivision().toString(), tournament.getResults());
-                playerRepository.updatePlayerChampionshipPoints(tournament.getResults());
-                playerRepository.updatePlayerAgeDivisions(tournament.getResults(), tournament.getAgeDivision());
-            }
-
-            connection.commit();
-        } catch (SQLException e) {
             try {
-                connection.rollback();
-            } catch (SQLException ex) {
-                ex.printStackTrace();
-            }
-            e.printStackTrace();
-        } finally {
-            try {
-                connection.setAutoCommit(true);
+
+                // 1. Save Event
+                String sqlEvent = "INSERT OR REPLACE INTO events (id, name, uploader_id) VALUES (?, ?, ?)";
+                try (PreparedStatement pstmt = conn.prepareStatement(sqlEvent)) {
+                    pstmt.setString(1, event.getId());
+                    pstmt.setString(2, event.getName());
+                    pstmt.setInt(3, event.getUploaderID());
+                    pstmt.executeUpdate();
+                }
+
+                // 2. Clear old divisions (Cascade will handle results)
+                String sqlDeleteDiv = "DELETE FROM tournaments WHERE event_id = ?";
+                try (PreparedStatement pstmt = conn.prepareStatement(sqlDeleteDiv)) {
+                    pstmt.setString(1, event.getId());
+                    pstmt.executeUpdate();
+                }
+
+                // 3. Save Divisions and Results
+                for (Tournament tournament : event.getDivisions()) {
+                    tournamentRepository.saveTournamentDivision(event.getId(), tournament);
+                    resultsRepository.saveResults(event.getId(), tournament.getAgeDivision().toString(), tournament.getResults());
+                    playerRepository.updatePlayerChampionshipPoints(tournament.getResults());
+                    playerRepository.updatePlayerAgeDivisions(tournament.getResults(), tournament.getAgeDivision());
+                }
+
+                conn.commit();
             } catch (SQLException e) {
+                try {
+                    conn.rollback();
+                } catch (SQLException ex) {
+                    ex.printStackTrace();
+                }
                 e.printStackTrace();
+            } finally {
+                try {
+                    conn.setAutoCommit(true);
+                } catch (SQLException e) {
+                    e.printStackTrace();
+                }
             }
+        } catch (SQLException e) {
+            e.printStackTrace();}
         }
-    }
 
     public Event getEventById(String id) {
         Event event = null;
         String sql = "SELECT * FROM events WHERE id = ?";
-        try (PreparedStatement pstmt = connection.prepareStatement(sql)) {
+        try (Connection conn = getConn();
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
             pstmt.setString(1, id);
             ResultSet rs = pstmt.executeQuery();
             if (rs.next()) {
@@ -99,7 +122,8 @@ public class EventRepository implements Services.Contracts.IEventRepository {
     @Override
     public void deleteEvent(String id) {
         String sql = "DELETE FROM events WHERE id = ?";
-        try (PreparedStatement pstmt = connection.prepareStatement(sql)) {
+        try (Connection conn = getConn();
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
             pstmt.setString(1, id);
             pstmt.executeUpdate();
         } catch (SQLException e) {
@@ -113,7 +137,8 @@ public class EventRepository implements Services.Contracts.IEventRepository {
     public List<Event> getAllEvents() {
         List<Event> events = new ArrayList<>();
         String sql = "SELECT id, name, uploader_id FROM events ORDER BY name";
-        try (Statement stmt = connection.createStatement();
+        try (Connection conn = getConn();
+             Statement stmt = conn.createStatement();
              ResultSet rs = stmt.executeQuery(sql)) {
             while (rs.next()) {
                 events.add(new Event(
