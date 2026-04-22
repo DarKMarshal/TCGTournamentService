@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="DataSourcePerFileMappings">
-    <file url="file://$PROJECT_DIR$/Backend/src/main/java/Database/Repositories/TournamentRepository.java" value="025c7c30-bb40-4523-a618-c07c53652816" />
+    <file url="file://$PROJECT_DIR$/Backend/src/main/java/Database/Repositories/AccountRepository.java" value="025c7c30-bb40-4523-a618-c07c53652816" />
     <file url="file://$PROJECT_DIR$/Backend/src/main/resources/Schema/schema.sql" value="025c7c30-bb40-4523-a618-c07c53652816" />
   </component>
 </project>

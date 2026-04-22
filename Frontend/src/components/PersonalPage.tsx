@@ -2,8 +2,7 @@ import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import type { PersonalDataDTO } from "../types/models";
-
-const API_BASE = "http://localhost:8080";
+import { authFetch } from "../utils/authFetch";
 
 export default function PersonalPage() {
   const { account, isOrganizer, isAdmin } = useAuth();
@@ -16,8 +15,13 @@ export default function PersonalPage() {
       return;
     }
 
-    fetch(`${API_BASE}/api/personal/${account.playerId}`)
-      .then((res) => res.json())
+    authFetch(`/api/personal/${account.playerId}`)
+      .then((res) => {
+        if (!res.ok) {
+          throw new Error(`Server responded with status ${res.status}`);
+        }
+        return res.json();
+      })
       .then((d: PersonalDataDTO) => {
         setData(d);
         setLoading(false);

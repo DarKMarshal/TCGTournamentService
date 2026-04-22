@@ -11,7 +11,6 @@ import java.sql.Connection;
 import java.util.List;
 
 @RestController
-@CrossOrigin(originPatterns = "*")
 @RequestMapping("/api/leaderboard")
 public class LeaderboardController {
 

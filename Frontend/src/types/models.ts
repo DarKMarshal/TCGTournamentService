@@ -56,6 +56,7 @@ export interface AccountResponse {
   playerId: number;
   dateOfBirth: string;
   role: "PLAYER" | "ORGANIZER" | "ADMIN";
+  token?: string;
 }
 
 /** Mirrors Backend Services.DTO.SignupRequest */

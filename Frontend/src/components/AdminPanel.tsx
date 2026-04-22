@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { useAuth } from "../context/AuthContext";
 import type { AccountResponse } from "../types/models";
+import { authFetch } from "../utils/authFetch";
 
 export default function AdminPanel() {
   const { isAdmin } = useAuth();
@@ -15,7 +16,7 @@ export default function AdminPanel() {
 
   const fetchAccounts = async () => {
     try {
-      const res = await fetch("/api/accounts");
+      const res = await authFetch("/api/accounts");
       if (res.ok) {
         setAccounts(await res.json());
       }
@@ -28,9 +29,8 @@ export default function AdminPanel() {
     setError("");
     setSuccess("");
     try {
-      const res = await fetch(`/api/accounts/${accountId}/role`, {
+      const res = await authFetch(`/api/accounts/${accountId}/role`, {
         method: "PUT",
-        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ accountId, role: newRole }),
       });
 

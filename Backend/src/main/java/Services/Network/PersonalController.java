@@ -17,7 +17,6 @@ import java.util.List;
 import java.util.Map;
 
 @RestController
-@CrossOrigin(originPatterns = "*")
 @RequestMapping("/api/personal")
 public class PersonalController {
 

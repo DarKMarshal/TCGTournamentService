@@ -5,6 +5,7 @@ import Models.Player;
 import Models.Result;
 import org.springframework.lang.NonNull;
 
+import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.List;
 
@@ -21,7 +22,11 @@ public interface IPlayerRepository {
 
     void updatePlayerChampionshipPoints(@NonNull List<Result> results) throws SQLException;
 
+    void updatePlayerChampionshipPoints(Connection conn, List<Result> results) throws SQLException;
+
     void updatePlayerAgeDivisions(@NonNull List<Result> results, AgeDivision ageDivision) throws SQLException;
+
+    void updatePlayerAgeDivisions(Connection conn, List<Result> results, AgeDivision ageDivision) throws SQLException;
 
     void deletePlayer(int id);
 }

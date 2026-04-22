@@ -11,9 +11,29 @@ import PersonalPage from "./components/PersonalPage";
 import NavBar from "./components/NavBar";
 import "./App.css";
 
+function RequireAuth({ children }: { children: React.ReactNode }) {
+  const { account } = useAuth();
+  if (!account) return <Navigate to="/login" replace />;
+  return <>{children}</>;
+}
+
 function RequireOrganizer({ children }: { children: React.ReactNode }) {
-  const { isOrganizer } = useAuth();
+  const { account, isOrganizer } = useAuth();
+  if (!account) return <Navigate to="/login" replace />;
   if (!isOrganizer) return <Navigate to="/" replace />;
+  return <>{children}</>;
+}
+
+function RequireAdmin({ children }: { children: React.ReactNode }) {
+  const { account, isAdmin } = useAuth();
+  if (!account) return <Navigate to="/login" replace />;
+  if (!isAdmin) return <Navigate to="/" replace />;
+  return <>{children}</>;
+}
+
+function RedirectIfAuthenticated({ children }: { children: React.ReactNode }) {
+  const { account } = useAuth();
+  if (account) return <Navigate to="/" replace />;
   return <>{children}</>;
 }
 
@@ -31,10 +51,10 @@ function App() {
             <Route path="/event/:eventId" element={<EventResultsPage />} />
             <Route path="/upload" element={<RequireOrganizer><FileUpload /></RequireOrganizer>} />
             <Route path="/leaderboard" element={<LeaderboardPage />} />
-            <Route path="/signup" element={<SignupPage />} />
-            <Route path="/login" element={<LoginPage />} />
-            <Route path="/personal" element={<PersonalPage />} />
-            <Route path="/admin" element={<AdminPanel />} />
+            <Route path="/signup" element={<RedirectIfAuthenticated><SignupPage /></RedirectIfAuthenticated>} />
+            <Route path="/login" element={<RedirectIfAuthenticated><LoginPage /></RedirectIfAuthenticated>} />
+            <Route path="/personal" element={<RequireAuth><PersonalPage /></RequireAuth>} />
+            <Route path="/admin" element={<RequireAdmin><AdminPanel /></RequireAdmin>} />
           </Routes>
         </div>
       </AuthProvider>

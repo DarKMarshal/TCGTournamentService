@@ -4,21 +4,38 @@ import Models.Account;
 import Models.Role;
 import Services.Contracts.IAccountRepository;
 
+import javax.sql.DataSource;
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
 
 public class AccountRepository implements IAccountRepository {
     private final Connection connection;
+    private final DataSource dataSource;
 
     public AccountRepository(Connection connection) {
         this.connection = connection;
+        this.dataSource = null;
+    }
+
+    public AccountRepository(DataSource dataSource) {
+        this.dataSource = dataSource;
+        this.connection = null;
+    }
+
+    private Connection getConn() throws SQLException {
+        if (dataSource != null) {
+            return dataSource.getConnection();
+        } else {
+            return ConnectionUtil.nonClosing(connection);
+        }
     }
 
     @Override
     public void saveAccount(Account account) {
         String sql = "INSERT INTO accounts (username, player_id, date_of_birth, password_hash, role) VALUES (?, ?, ?, ?, ?)";
-        try (PreparedStatement pstmt = connection.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
+        try (Connection conn = getConn();
+             PreparedStatement pstmt = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
             pstmt.setString(1, account.getUsername());
             pstmt.setInt(2, account.getPlayerId());
             pstmt.setString(3, account.getDateOfBirth());
@@ -38,7 +55,8 @@ public class AccountRepository implements IAccountRepository {
     @Override
     public Account getAccountById(int id) {
         String sql = "SELECT * FROM accounts WHERE id = ?";
-        try (PreparedStatement pstmt = connection.prepareStatement(sql)) {
+        try (Connection conn = getConn();
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
             pstmt.setInt(1, id);
             ResultSet rs = pstmt.executeQuery();
             if (rs.next()) {
@@ -53,7 +71,8 @@ public class AccountRepository implements IAccountRepository {
     @Override
     public Account getAccountByUsername(String username) {
         String sql = "SELECT * FROM accounts WHERE username = ?";
-        try (PreparedStatement pstmt = connection.prepareStatement(sql)) {
+        try (Connection conn = getConn();
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
             pstmt.setString(1, username);
             ResultSet rs = pstmt.executeQuery();
             if (rs.next()) {
@@ -69,7 +88,8 @@ public class AccountRepository implements IAccountRepository {
     public List<Account> getAllAccounts() {
         List<Account> accounts = new ArrayList<>();
         String sql = "SELECT * FROM accounts ORDER BY id";
-        try (Statement stmt = connection.createStatement();
+        try (Connection conn = getConn();
+             Statement stmt = conn.createStatement();
              ResultSet rs = stmt.executeQuery(sql)) {
             while (rs.next()) {
                 accounts.add(mapRow(rs));
@@ -83,7 +103,8 @@ public class AccountRepository implements IAccountRepository {
     @Override
     public void updateAccountRole(int id, Role role) {
         String sql = "UPDATE accounts SET role = ? WHERE id = ?";
-        try (PreparedStatement pstmt = connection.prepareStatement(sql)) {
+        try (Connection conn = getConn();
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
             pstmt.setString(1, role.name());
             pstmt.setInt(2, id);
             pstmt.executeUpdate();
@@ -95,7 +116,8 @@ public class AccountRepository implements IAccountRepository {
     @Override
     public void deleteAccount(int id) {
         String sql = "DELETE FROM accounts WHERE id = ?";
-        try (PreparedStatement pstmt = connection.prepareStatement(sql)) {
+        try (Connection conn = getConn();
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
             pstmt.setInt(1, id);
             pstmt.executeUpdate();
         } catch (SQLException e) {
@@ -106,7 +128,8 @@ public class AccountRepository implements IAccountRepository {
     @Override
     public boolean usernameExists(String username) {
         String sql = "SELECT COUNT(*) FROM accounts WHERE username = ?";
-        try (PreparedStatement pstmt = connection.prepareStatement(sql)) {
+        try (Connection conn = getConn();
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
             pstmt.setString(1, username);
             ResultSet rs = pstmt.executeQuery();
             if (rs.next()) {

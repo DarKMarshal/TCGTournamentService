@@ -6,6 +6,7 @@ public class AccountResponse {
     private int playerId;
     private String dateOfBirth;
     private String role;
+    private String token;
 
     public AccountResponse(int id, String username, int playerId, String dateOfBirth, String role) {
         this.id = id;
@@ -20,4 +21,6 @@ public class AccountResponse {
     public int getPlayerId() { return playerId; }
     public String getDateOfBirth() { return dateOfBirth; }
     public String getRole() { return role; }
+    public String getToken() { return token; }
+    public void setToken(String token) { this.token = token; }
 }

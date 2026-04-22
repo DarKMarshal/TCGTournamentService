@@ -20,7 +20,6 @@ import java.util.List;
 import java.util.Map;
 
 @Controller
-@CrossOrigin(originPatterns = "*")
 public class TournamentWebSocketController {
 
     private final IEventRepository eventRepository;

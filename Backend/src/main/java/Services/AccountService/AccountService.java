@@ -6,6 +6,7 @@ import Services.Contracts.IAccountRepository;
 import Services.DTO.Account.AccountResponse;
 import Services.DTO.Account.LoginRequest;
 import Services.DTO.Account.SignupRequest;
+import Services.Security.JwtUtil;
 import org.mindrot.jbcrypt.BCrypt;
 
 import java.util.List;
@@ -37,7 +38,9 @@ public class AccountService {
                 passwordHash
         );
         accountRepository.saveAccount(account);
-        return toResponse(account);
+        AccountResponse response = toResponse(account);
+        response.setToken(JwtUtil.generateToken(account.getId(), account.getUsername(), account.getRole().name()));
+        return response;
     }
 
     public static AccountResponse login(IAccountRepository accountRepository, LoginRequest request) {
@@ -48,7 +51,9 @@ public class AccountService {
         if (!BCrypt.checkpw(request.getPassword(), account.getPasswordHash())) {
             throw new IllegalArgumentException("Invalid username or password");
         }
-        return toResponse(account);
+        AccountResponse response = toResponse(account);
+        response.setToken(JwtUtil.generateToken(account.getId(), account.getUsername(), account.getRole().name()));
+        return response;
     }
 
     public static AccountResponse updateRole(IAccountRepository accountRepository, int accountId, Role role) {

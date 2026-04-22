@@ -6,7 +6,6 @@ import Services.ImportService.ImportService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
-import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
@@ -23,7 +22,6 @@ import java.util.List;
  * After a successful import, broadcasts an updated event list via WebSocket.
  */
 @RestController
-@CrossOrigin(originPatterns = "*")
 public class FileUploadController {
 
     private final Connection connection;

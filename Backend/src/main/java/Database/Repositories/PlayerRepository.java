@@ -5,21 +5,38 @@ import Models.Player;
 import Models.Result;
 import org.springframework.lang.NonNull;
 
+import javax.sql.DataSource;
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
 
 public class PlayerRepository implements Services.Contracts.IPlayerRepository {
     private final Connection connection;
+    private final DataSource dataSource;
 
     public PlayerRepository(Connection connection) {
         this.connection = connection;
+        this.dataSource = null;
+    }
+
+    public PlayerRepository(DataSource dataSource) {
+        this.dataSource = dataSource;
+        this.connection = null;
+    }
+
+    private Connection getConn() throws SQLException {
+        if (dataSource != null) {
+            return dataSource.getConnection();
+        } else {
+            return ConnectionUtil.nonClosing(connection);
+        }
     }
 
     @Override
     public void savePlayer(@NonNull Player player) {
         String sql = "INSERT OR REPLACE INTO players (id, name, ageDivision, championship_points) VALUES (?, ?, ?, ?)";
-        try (PreparedStatement pstmt = connection.prepareStatement(sql)) {
+        try (Connection conn = getConn();
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
             pstmt.setInt(1, player.getId());
             pstmt.setString(2, player.getName());
             pstmt.setString(3, player.getAgeDivision() != null ? player.getAgeDivision().name() : null);
@@ -33,7 +50,8 @@ public class PlayerRepository implements Services.Contracts.IPlayerRepository {
     @Override
     public Player getPlayerById(int id) {
         String sql = "SELECT * FROM players WHERE id = ?";
-        try (PreparedStatement pstmt = connection.prepareStatement(sql)) {
+        try (Connection conn = getConn();
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
             pstmt.setInt(1, id);
             ResultSet rs = pstmt.executeQuery();
             if (rs.next()) {
@@ -70,7 +88,8 @@ public class PlayerRepository implements Services.Contracts.IPlayerRepository {
     public List<Player> getAllPlayers() {
         List<Player> players = new ArrayList<>();
         String sql = "SELECT * FROM players ORDER BY id";
-        try (Statement stmt = connection.createStatement();
+        try (Connection conn = getConn();
+             Statement stmt = conn.createStatement();
              ResultSet rs = stmt.executeQuery(sql)) {
             while (rs.next()) {
                 Player player = new Player(
@@ -94,7 +113,8 @@ public class PlayerRepository implements Services.Contracts.IPlayerRepository {
     public List<Player> getPlayersByAgeDivision(AgeDivision ageDivision) {
         List<Player> players = new ArrayList<>();
         String sql = "SELECT * FROM players WHERE ageDivision = ?";
-        try (PreparedStatement pstmt = connection.prepareStatement(sql)) {
+        try (Connection conn = getConn();
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
             pstmt.setString(1, ageDivision.name());
             ResultSet rs = pstmt.executeQuery();
             while (rs.next()) {
@@ -115,7 +135,23 @@ public class PlayerRepository implements Services.Contracts.IPlayerRepository {
     @Override
     public void updatePlayerChampionshipPoints(@NonNull List<Result> results) throws SQLException {
         String sql = "UPDATE players SET championship_points = championship_points + ? WHERE id = ?";
-        try (PreparedStatement pstmt = connection.prepareStatement(sql)) {
+        try (Connection conn = getConn();
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+            for (Result result : results) {
+                int pointsEarned = result.getChampionshipPointsEarned();
+                if (pointsEarned > 0) {
+                    pstmt.setInt(1, pointsEarned);
+                    pstmt.setInt(2, result.getPlayer().getId());
+                    pstmt.addBatch();
+                }
+            }
+            pstmt.executeBatch();
+        }
+    }
+
+    public void updatePlayerChampionshipPoints(Connection conn, @NonNull List<Result> results) throws SQLException {
+        String sql = "UPDATE players SET championship_points = championship_points + ? WHERE id = ?";
+        try (PreparedStatement pstmt = conn.prepareStatement(sql)) {
             for (Result result : results) {
                 int pointsEarned = result.getChampionshipPointsEarned();
                 if (pointsEarned > 0) {
@@ -131,7 +167,20 @@ public class PlayerRepository implements Services.Contracts.IPlayerRepository {
     @Override
     public void updatePlayerAgeDivisions(@NonNull List<Result> results, @NonNull AgeDivision ageDivision) throws SQLException {
         String sql = "UPDATE players SET ageDivision = ? WHERE id = ?";
-        try (PreparedStatement pstmt = connection.prepareStatement(sql)) {
+        try (Connection conn = getConn();
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+            for (Result result : results) {
+                pstmt.setString(1, ageDivision.name());
+                pstmt.setInt(2, result.getPlayer().getId());
+                pstmt.addBatch();
+            }
+            pstmt.executeBatch();
+        }
+    }
+
+    public void updatePlayerAgeDivisions(Connection conn, @NonNull List<Result> results, @NonNull AgeDivision ageDivision) throws SQLException {
+        String sql = "UPDATE players SET ageDivision = ? WHERE id = ?";
+        try (PreparedStatement pstmt = conn.prepareStatement(sql)) {
             for (Result result : results) {
                 pstmt.setString(1, ageDivision.name());
                 pstmt.setInt(2, result.getPlayer().getId());
@@ -144,7 +193,8 @@ public class PlayerRepository implements Services.Contracts.IPlayerRepository {
     @Override
     public void deletePlayer(int id) {
         String sql = "DELETE FROM players WHERE id = ?";
-        try (PreparedStatement pstmt = connection.prepareStatement(sql)) {
+        try (Connection conn = getConn();
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
             pstmt.setInt(1, id);
             pstmt.executeUpdate();
         } catch (SQLException e) {

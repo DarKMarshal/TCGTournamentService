@@ -8,6 +8,7 @@ import Services.Contracts.IResultsRepository;
 import Services.Contracts.ITournamentRepository;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Profile;
 
 import java.sql.Connection;
 
@@ -16,11 +17,12 @@ import java.sql.Connection;
  * so that controllers can inject repositories.
  */
 @Configuration
-public class DatabaseBeans {
+@Profile("local")
+public class LocalDatabaseBeans {
 
     private final DatabaseInstance databaseInstance;
 
-    public DatabaseBeans() {
+    public LocalDatabaseBeans() {
         this.databaseInstance = DatabaseInstance.createInstance();
         this.databaseInstance.connect();
     }
