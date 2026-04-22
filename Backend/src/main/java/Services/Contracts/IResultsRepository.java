@@ -1,6 +1,7 @@
 package Services.Contracts;
 
 import Models.Result;
+import Services.DTO.Account.PersonalPage.PersonalResultDTO;
 import org.springframework.lang.NonNull;
 
 import java.sql.Connection;
@@ -13,4 +14,6 @@ public interface IResultsRepository {
     void saveResults(Connection conn, String eventId, String ageDivision, List<Result> results) throws SQLException;
 
     List<Result> getResultsByEventAndDivision(String eventId, String ageDivision);
+
+    List<PersonalResultDTO> findResultsByPlayerId(int playerId);
 }

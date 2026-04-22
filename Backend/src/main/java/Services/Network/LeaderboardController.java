@@ -1,6 +1,7 @@
 package Services.Network;
 
 import Models.AgeDivision;
+import Services.Contracts.IPlayerRepository;
 import Services.DTO.Leaderboard.LeaderboardDTO;
 import Services.PlayerService.PlayerService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -14,23 +15,23 @@ import java.util.List;
 @RequestMapping("/api/leaderboard")
 public class LeaderboardController {
 
-    private final Connection connection;
+    private final IPlayerRepository playerRepository;
 
     @Autowired
-    public LeaderboardController(Connection connection) {
-        this.connection = connection;
+    public LeaderboardController(IPlayerRepository playerRepository) {
+        this.playerRepository = playerRepository;
     }
 
     @GetMapping
-    public ResponseEntity<List<LeaderboardDTO>> getAllLeaderboards(){
-        return ResponseEntity.ok(PlayerService.getLeaderboards(connection));
+    public ResponseEntity<List<LeaderboardDTO>> getAllLeaderboards() {
+        return ResponseEntity.ok(playerRepository.getLeaderboards());
     }
 
     @GetMapping("/{ageDivision}")
-    public ResponseEntity<LeaderboardDTO> getLeaderboardByAgeDivision(@PathVariable String ageDivision){
+    public ResponseEntity<LeaderboardDTO> getLeaderboardByAgeDivision(@PathVariable String ageDivision) {
         try {
             AgeDivision division = AgeDivision.valueOf(ageDivision);
-            return ResponseEntity.ok(PlayerService.getLeaderboardByDivision(connection, division));
+            return ResponseEntity.ok(playerRepository.getLeaderboardByAgeDivision(division));
         } catch (IllegalArgumentException e) {
             return ResponseEntity.badRequest().build();
         }

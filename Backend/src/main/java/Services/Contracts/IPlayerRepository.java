@@ -3,6 +3,8 @@ package Services.Contracts;
 import Models.AgeDivision;
 import Models.Player;
 import Models.Result;
+import Services.DTO.Account.PersonalPage.PersonalPlayerDTO;
+import Services.DTO.Leaderboard.LeaderboardDTO;
 import org.springframework.lang.NonNull;
 
 import java.sql.Connection;
@@ -19,6 +21,12 @@ public interface IPlayerRepository {
     List<Player> getAllPlayers();
 
     List<Player> getPlayersByAgeDivision(AgeDivision ageDivision);
+
+    List<LeaderboardDTO> getLeaderboards();
+
+    LeaderboardDTO getLeaderboardByAgeDivision(AgeDivision ageDivision);
+
+    PersonalPlayerDTO findPersonalPlayer(int id);
 
     void updatePlayerChampionshipPoints(@NonNull List<Result> results) throws SQLException;
 

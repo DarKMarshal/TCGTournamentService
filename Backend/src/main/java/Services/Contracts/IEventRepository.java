@@ -1,6 +1,7 @@
 package Services.Contracts;
 
 import Models.Event;
+import Services.DTO.Account.PersonalPage.PersonalEventDTO;
 import org.springframework.lang.NonNull;
 
 import java.util.List;
@@ -13,4 +14,6 @@ public interface IEventRepository {
     Event getEventById(String id);
 
     public List<Event> getAllEvents();
+
+    List<PersonalEventDTO> findEventsByUploaderId(int uploaderId);
 }

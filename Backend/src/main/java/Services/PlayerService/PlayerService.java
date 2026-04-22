@@ -16,6 +16,7 @@ import java.util.List;
 
 public class PlayerService {
 
+    // TODO: This File might not be needed, most of the functionality has been moved to Player Repo.
     @NonNull
     public static List<LeaderboardDTO> getLeaderboards(Connection connection){
         List<LeaderboardDTO> leaderboards = new ArrayList<>();

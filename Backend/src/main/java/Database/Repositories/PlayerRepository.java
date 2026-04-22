@@ -3,6 +3,9 @@ package Database.Repositories;
 import Models.AgeDivision;
 import Models.Player;
 import Models.Result;
+import Services.DTO.Account.PersonalPage.PersonalPlayerDTO;
+import Services.DTO.Event.PlayerDTO;
+import Services.DTO.Leaderboard.LeaderboardDTO;
 import org.springframework.lang.NonNull;
 
 import javax.sql.DataSource;
@@ -132,6 +135,43 @@ public class PlayerRepository implements Services.Contracts.IPlayerRepository {
         return players;
     }
 
+    @Override
+    public PersonalPlayerDTO findPersonalPlayer(int playerId) {
+        String sql = "SELECT id, name, championship_points FROM players WHERE id = ?";
+        try (Connection conn = getConn();
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+            pstmt.setInt(1, playerId);
+            ResultSet rs = pstmt.executeQuery();
+            if (rs.next()) {
+                return new PersonalPlayerDTO(
+                        rs.getInt("id"),
+                        rs.getString("name"),
+                        rs.getInt("championship_points")
+                );
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
+    @Override
+    public List<LeaderboardDTO> getLeaderboards() { 
+        List<LeaderboardDTO> leaderboards = new ArrayList<>();
+        for (AgeDivision ageDivision : AgeDivision.values()) {
+            leaderboards.add(getLeaderboardByAgeDivision(ageDivision));
+        }
+        return leaderboards;
+    }
+
+    @Override
+    public LeaderboardDTO getLeaderboardByAgeDivision(AgeDivision ageDivision) {
+        List<PlayerDTO> playerDTOs = getPlayersByAgeDivision(ageDivision)
+                .stream()
+                .map(p -> new PlayerDTO(p.getName(), p.getChampionshipPoints()))
+                .toList();
+        return new LeaderboardDTO(ageDivision.name(), playerDTOs);
+    }
     @Override
     public void updatePlayerChampionshipPoints(@NonNull List<Result> results) throws SQLException {
         String sql = "UPDATE players SET championship_points = championship_points + ? WHERE id = ?";

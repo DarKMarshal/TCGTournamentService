@@ -10,10 +10,8 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Profile;
 
-import java.sql.Connection;
-
 /**
- * Bridges the manually-managed DatabaseInstance into Spring's DI context
+ * Bridges the manually managed DatabaseInstance into Spring's DI context
  * so that controllers can inject repositories.
  */
 @Configuration
@@ -27,10 +25,6 @@ public class LocalDatabaseBeans {
         this.databaseInstance.connect();
     }
 
-    @Bean
-    public Connection databaseConnection() {
-        return databaseInstance.getConnection();
-    }
 
     @Bean
     public IEventRepository eventRepository() {

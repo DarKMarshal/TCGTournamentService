@@ -2,6 +2,7 @@ package Database.Repositories;
 
 import Models.Player;
 import Models.Result;
+import Services.DTO.Account.PersonalPage.PersonalResultDTO;
 import org.springframework.lang.NonNull;
 
 import javax.sql.DataSource;
@@ -105,6 +106,33 @@ public class ResultsRepository implements Services.Contracts.IResultsRepository 
                 );
                 result.setChampionshipPointsEarned(rs.getInt("points"));
                 results.add(result);
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return results;
+    }
+
+    @Override
+    public List<PersonalResultDTO> findResultsByPlayerId(int playerId) {
+        List<PersonalResultDTO> results = new ArrayList<>();
+        String sql = "SELECT r.event_id, e.name AS event_name, r.age_division, r.placement, r.points " +
+                "FROM results r " +
+                "JOIN events e ON r.event_id = e.id " +
+                "WHERE r.player_id = ? " +
+                "ORDER BY e.name, r.age_division";
+        try (Connection conn = getConn();
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+            pstmt.setInt(1, playerId);
+            ResultSet rs = pstmt.executeQuery();
+            while (rs.next()) {
+                results.add(new PersonalResultDTO(
+                        rs.getString("event_id"),
+                        rs.getString("event_name"),
+                        rs.getString("age_division"),
+                        rs.getInt("placement"),
+                        rs.getInt("points")
+                ));
             }
         } catch (SQLException e) {
             e.printStackTrace();
