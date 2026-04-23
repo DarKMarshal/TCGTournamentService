@@ -157,7 +157,7 @@ package "Services.Calculation" <<calc>> {
 }
 
 ' ═══════════════════════════════════════════════
-'  4 ·  DTO  (purple)
+'  4 ·  com.darkmarshal.tournamentservice.DTO  (purple)
 ' ═══════════════════════════════════════════════
 package "Services.DTO" <<dto>> {
 
@@ -370,7 +370,7 @@ EventRepository "1" *-[#00897B]- "1" IResultsRepository
 EventRepository "1" *-[#00897B]- "1" PlayerRepository
 EventRepository "1" *-[#00897B]- "1" ITournamentRepository
 
-' ── Database internals (teal dashed) ──────────
+' ── com.darkmarshal.tournamentservice.Database internals (teal dashed) ──────────
 DatabaseInstance ..[#00897B].> DatabaseConfig    : reads DB_PATH
 DatabaseInstance ..[#00897B].> DBInitializer     : initializes schema
 
@@ -397,7 +397,7 @@ TDFParseService .[#E64A19].> IPlayerRepository  : uses
 TDFParseService .[#E64A19].> IEventRepository   : uses
 TDFParseService .[#E64A19].> PlayerMatchStats   : creates
 
-' ── DTO usage (purple dashed) ─────────────────
+' ── com.darkmarshal.tournamentservice.DTO usage (purple dashed) ─────────────────
 TournamentWebSocketController .[#8E24AA].> EventSummaryDTO  : returns
 TournamentWebSocketController .[#8E24AA].> EventDetailsDTO  : returns
 TournamentWebSocketController .[#8E24AA].> DivisionDTO      : returns

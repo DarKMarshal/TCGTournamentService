@@ -4,7 +4,7 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
-    <groupId>com.tcgt</groupId>
+    <groupId>com.darkmarshal</groupId>
     <artifactId>tournament-service</artifactId>
     <version>1.0-SNAPSHOT</version>
 
@@ -20,7 +20,7 @@
     </properties>
 
     <dependencies>
-        <!-- Spring Web (For REST Controllers/Web Interface) -->
+        <!-- Spring Web (For REST com.darkmarshal.tournamentservice.Controllers/Web Interface) -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-web</artifactId>
@@ -45,6 +45,23 @@
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-jdbc</artifactId>
+        </dependency>
+
+        <!-- Spring Cache + Redis (Azure production caching) -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-cache</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-data-redis</artifactId>
+        </dependency>
+
+        <!-- Azure Service Bus (cross-instance WebSocket relay) -->
+        <dependency>
+            <groupId>com.azure</groupId>
+            <artifactId>azure-messaging-servicebus</artifactId>
+            <version>7.17.8</version>
         </dependency>
 
         <!-- SQLite JDBC Driver (local development) -->
