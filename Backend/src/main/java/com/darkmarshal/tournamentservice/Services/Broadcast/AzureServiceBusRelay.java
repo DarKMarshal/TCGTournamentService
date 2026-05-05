@@ -100,7 +100,7 @@ public class AzureServiceBusRelay {
      */
     public void publish(String destination, Object payload) {
         try {
-            RelayEnvelope envelope = new RelayEnvelope(instanceId, destination, objectMapper.writeValueAsString(payload));
+            RelayEnvelope envelope = new RelayEnvelope(instanceId, destination, null, objectMapper.writeValueAsString(payload));
             String json = objectMapper.writeValueAsString(envelope);
             senderClient.sendMessage(new ServiceBusMessage(json));
         } catch (Exception e) {
@@ -110,13 +110,28 @@ public class AzureServiceBusRelay {
         }
     }
 
+    public void publishToUser(String username, String destination, Object payload) {
+        try {
+            RelayEnvelope envelope = new RelayEnvelope(instanceId, destination, username, objectMapper.writeValueAsString(payload));
+            String json = objectMapper.writeValueAsString(envelope);
+            senderClient.sendMessage(new ServiceBusMessage(json));
+        } catch (Exception e) {
+            System.err.println("Failed to publish user message to Service Bus: " + e.getMessage());
+            messagingTemplate.convertAndSendToUser(username, destination, payload);
+        }
+    }
+
     private void handleMessage(ServiceBusReceivedMessageContext context) {
         try {
             String body = context.getMessage().getBody().toString();
             RelayEnvelope envelope = objectMapper.readValue(body, RelayEnvelope.class);
 
             // Deliver the message to WebSocket clients connected to this instance
-            messagingTemplate.convertAndSend(envelope.destination(), envelope.payload());
+            if (envelope.targetUser() != null) {
+                messagingTemplate.convertAndSendToUser(envelope.targetUser(), envelope.destination(), envelope.payload());
+            } else {
+                messagingTemplate.convertAndSend(envelope.destination(), envelope.payload());
+            }
         } catch (Exception e) {
             System.err.println("Failed to process relayed message: " + e.getMessage());
         }
@@ -129,5 +144,5 @@ public class AzureServiceBusRelay {
     /**
      * Envelope that wraps a WebSocket broadcast for transit through Service Bus.
      */
-    private record RelayEnvelope(String sourceInstanceId, String destination, String payload) {}
+    private record RelayEnvelope(String sourceInstanceId, String destination, String targetUser, String payload) {}
 }

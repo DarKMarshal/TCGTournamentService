@@ -21,4 +21,9 @@ public class LocalBroadcastService implements WebSocketBroadcastService {
     public void broadcast(String destination, Object payload) {
         messagingTemplate.convertAndSend(destination, payload);
     }
+
+    @Override
+    public void sendToUser(String username, String destination, Object payload) {
+        messagingTemplate.convertAndSendToUser(username, destination, payload);
+    }
 }

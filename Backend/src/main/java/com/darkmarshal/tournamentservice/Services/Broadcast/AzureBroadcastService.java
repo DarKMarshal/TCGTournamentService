@@ -21,4 +21,9 @@ public class AzureBroadcastService implements WebSocketBroadcastService {
     public void broadcast(String destination, Object payload) {
         relay.publish(destination, payload);
     }
+
+    @Override
+    public void sendToUser(String username, String destination, Object payload) {
+        relay.publishToUser(username, destination, payload);
+    }
 }

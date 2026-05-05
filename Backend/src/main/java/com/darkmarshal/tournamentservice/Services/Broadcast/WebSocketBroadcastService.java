@@ -19,4 +19,13 @@ public interface WebSocketBroadcastService {
      * @param payload     the payload to send
      */
     void broadcast(String destination, Object payload);
+
+    /**
+     * Send a message to a specific user's queue.
+     *
+     * @param username    the target user's principal name
+     * @param destination user destination (e.g. "/queue/upload-progress")
+     * @param payload     the payload to send
+     */
+    void sendToUser(String username, String destination, Object payload);
 }
