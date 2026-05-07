@@ -323,7 +323,7 @@ TournamentWebSocketController o-[#EF6C00]- ResultsRepository
 DatabaseBeans                 o-[#EF6C00]- DatabaseInstance
 ImportService                 o-[#E64A19]- TDFParseService
 
-' ── DTO compositions ──────────────────────────
+' ── com.darkmarshal.tournamentservice.DTO compositions ──────────────────────────
 EventDetailsDTO "1" *-[#8E24AA]- "1..*" DivisionDTO      : divisions
 DivisionDTO     "1" *-[#8E24AA]- "0..*" Result           : results
 
